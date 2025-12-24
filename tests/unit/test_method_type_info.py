@@ -77,6 +77,7 @@ class TestGetMethodTypeInfo:
 
     def test_inherited_method(self) -> None:
         """Inherited method is found in MRO."""
+
         class ChildClass(SampleClass):
             pass
 

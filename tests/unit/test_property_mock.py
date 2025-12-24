@@ -186,8 +186,6 @@ class TestMockedProperty:
         mock = MagicMock()
         prop: MockedProperty[str] = MockedProperty(mock)
 
-
-
         mock("first")
         mock("second")
 
@@ -319,8 +317,6 @@ class TestMockedClassMethod:
         """assert_has_calls method."""
         mock = MagicMock()
         method: MockedClassMethod[[int], str] = MockedClassMethod(mock)
-
-
 
         method(1)
         method(2)
@@ -523,8 +519,6 @@ class TestMockedStaticMethod:
         """assert_has_calls method."""
         mock = MagicMock()
         method: MockedStaticMethod[[int], str] = MockedStaticMethod(mock)
-
-
 
         method(1)
         method(2)
