@@ -11,10 +11,6 @@ from typing import TYPE_CHECKING
 import pytest
 
 
-if TYPE_CHECKING:
-    from tests.fixtures.sample_classes import UserService
-
-
 # =============================================================================
 # Sample class fixtures
 # =============================================================================
