@@ -40,8 +40,10 @@ Documentation = "https://github.com/your-org/typed-pytest#readme"
 Repository = "https://github.com/your-org/typed-pytest"
 Issues = "https://github.com/your-org/typed-pytest/issues"
 
-[project.entry-points.pytest11]
-typed_pytest = "typed_pytest._fixtures"
+# Note: typed_mocker fixture is registered in tests/conftest.py instead of
+# using entry-points. This is intentional to ensure proper coverage measurement
+# when using pytest-cov. Entry-point plugins are loaded before coverage starts,
+# causing incomplete coverage data.
 
 [build-system]
 requires = ["hatchling"]

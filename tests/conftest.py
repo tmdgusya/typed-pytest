@@ -11,6 +11,12 @@ from typing import TYPE_CHECKING
 import pytest
 
 
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
+
+    from typed_pytest._mocker import TypedMocker
+
+
 # =============================================================================
 # Sample class fixtures
 # =============================================================================
@@ -24,4 +30,29 @@ def user_service_class() -> type[UserService]:
     return UserService
 
 
-# Phase 2 (T201)에서 typed_mocker fixture 추가 예정
+# =============================================================================
+# typed-pytest fixtures
+# =============================================================================
+
+
+@pytest.fixture
+def typed_mocker(mocker: MockerFixture) -> TypedMocker:
+    """타입 안전한 MockerFixture를 제공하는 fixture.
+
+    pytest-mock의 mocker fixture를 래핑하여 타입 안전한 mock 기능을 제공합니다.
+
+    Args:
+        mocker: pytest-mock의 MockerFixture.
+
+    Returns:
+        TypedMocker 인스턴스.
+
+    Example:
+        >>> def test_service(typed_mocker: TypedMocker) -> None:
+        ...     mock = typed_mocker.mock(UserService)
+        ...     mock.get_user.return_value = {"id": 1}
+        ...     assert mock.get_user(1) == {"id": 1}
+    """
+    from typed_pytest._mocker import TypedMocker
+
+    return TypedMocker(mocker)
