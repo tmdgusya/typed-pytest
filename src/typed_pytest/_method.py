@@ -155,6 +155,74 @@ class MockedMethod(Generic[P, R]):
         """
         self._mock.assert_has_calls(calls, any_order=any_order)
 
+    # =============================================================================
+    # Async Assertion Methods - async Mock과의 호환성을 위해 추가
+    # =============================================================================
+
+    def assert_awaited(self) -> None:
+        """Mock이 await되었는지 확인 (async Mock 호환성).
+
+        sync Mock에서는 항상 통과합니다.
+        """
+        if hasattr(self._mock, "assert_awaited"):
+            self._mock.assert_awaited()
+
+    def assert_awaited_once(self) -> None:
+        """Mock이 정확히 한 번 await되었는지 확인 (async Mock 호환성).
+
+        sync Mock에서는 항상 통과합니다.
+        """
+        if hasattr(self._mock, "assert_awaited_once"):
+            self._mock.assert_awaited_once()
+
+    def assert_awaited_with(self, *args: Any, **kwargs: Any) -> None:
+        """Mock이 지정된 인자로 await되었는지 확인 (async Mock 호환성).
+
+        sync Mock에서는 항상 통과합니다.
+        """
+        if hasattr(self._mock, "assert_awaited_with"):
+            self._mock.assert_awaited_with(*args, **kwargs)
+
+    def assert_awaited_once_with(self, *args: Any, **kwargs: Any) -> None:
+        """Mock이 정확히 한 번, 지정된 인자로 await되었는지 확인 (async Mock 호환성).
+
+        sync Mock에서는 항상 통과합니다.
+        """
+        if hasattr(self._mock, "assert_awaited_once_with"):
+            self._mock.assert_awaited_once_with(*args, **kwargs)
+
+    def assert_has_awaits(self, calls: list[Any], any_order: bool = False) -> None:
+        """Mock이 지정된 호출 목록대로 await되었는지 확인 (async Mock 호환성).
+
+        sync Mock에서는 항상 통과합니다.
+        """
+        if hasattr(self._mock, "assert_has_awaits"):
+            self._mock.assert_has_awaits(calls, any_order=any_order)
+
+    @property
+    def await_count(self) -> int:
+        """Mock이 await된 횟수 (async Mock 호환성).
+
+        sync Mock에서는 0을 반환합니다.
+        """
+        return getattr(self._mock, "await_count", 0)
+
+    @property
+    def await_args(self) -> Any:
+        """마지막 await 인자 (async Mock 호환성).
+
+        sync Mock에서는 None을 반환합니다.
+        """
+        return getattr(self._mock, "await_args", None)
+
+    @property
+    def await_args_list(self) -> list[Any]:
+        """모든 await 인자 목록 (async Mock 호환성).
+
+        sync Mock에서는 빈 목록을 반환합니다.
+        """
+        return getattr(self._mock, "await_args_list", [])
+
     def reset_mock(
         self,
         *,
