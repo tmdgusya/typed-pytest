@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from tests.fixtures.sample_classes import ProductRepository, UserService
-from typed_pytest._mock import TypedMock
+from typed_pytest import TypedMock
 
 
 class TestTypedMockCreation:

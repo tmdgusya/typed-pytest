@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 from tests.fixtures.sample_classes import ProductRepository, UserService
+from typed_pytest import TypedMock
 from typed_pytest._method import MockedMethod
-from typed_pytest._mock import TypedMock
 from typed_pytest._mocker import TypedMocker
 
 
