@@ -1055,15 +1055,15 @@ class TestNestedMock:
 
 | Task | 담당자 | 상태 | 비고 |
 |------|--------|------|------|
-| T000 | - | BACKLOG | |
-| T001 | - | BACKLOG | |
-| T002 | - | BACKLOG | |
-| T100 | - | BACKLOG | |
-| T101 | - | BACKLOG | |
-| T102 | - | BACKLOG | |
-| T103 | - | BACKLOG | |
-| T104 | - | BACKLOG | |
-| T105 | - | BACKLOG | |
+| T000 | Claude | DONE | 프로젝트 구조 완료 |
+| T001 | Claude | DONE | 테스트 인프라 완료 |
+| T002 | Claude | DONE | 샘플 클래스 정의 완료 |
+| T100 | Claude | DONE | MockProtocol, AsyncMockProtocol 완료 |
+| T101 | Claude | DONE | MockedMethod, AsyncMockedMethod 완료 |
+| T102 | Claude | DONE | TypedMock 제네릭 클래스 완료 |
+| T103 | Claude | DONE | typed_mock 팩토리 함수 완료 |
+| T104 | Claude | DONE | 공개 API 정의 완료 |
+| T105 | Claude | DONE | 기본 타입 체커 호환성 검증 완료 |
 | T200 | - | BACKLOG | |
 | T201 | - | BACKLOG | |
 | T202 | - | BACKLOG | |

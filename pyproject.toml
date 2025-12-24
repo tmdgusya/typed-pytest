@@ -153,6 +153,9 @@ reportUnusedClass = true
 reportUnusedFunction = true
 reportUnusedVariable = true
 reportDuplicateImport = true
+# MagicMock의 __new__와 TypedMock의 __init__ 시그니처 불일치 허용
+# (MagicMock 상속 시 불가피한 문제)
+reportInconsistentConstructor = false
 
 # ============================================================================
 # ruff configuration
@@ -202,6 +205,8 @@ ignore = [
     "PLR0913",# too many arguments
     "PLR2004",# magic value in comparison
     "TRY003", # long exception message
+    "UP046",  # ParamSpec with Generic[] not compatible with new syntax
+    "UP047",  # Generic function with TypeVar not compatible with new syntax in @overload
 ]
 
 [tool.ruff.lint.per-file-ignores]
