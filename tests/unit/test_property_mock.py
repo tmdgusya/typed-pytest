@@ -1,6 +1,6 @@
 """MockedProperty, MockedClassMethod, and MockedStaticMethod tests."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import pytest
 
@@ -126,6 +126,73 @@ class TestMockedProperty:
         assert hasattr(prop, "mock_calls")
         assert prop.mock_calls == []
 
+    def test_side_effect_callable(self) -> None:
+        """side_effect with callable."""
+        mock = MagicMock()
+        prop: MockedProperty[int] = MockedProperty(mock)
+
+        def side_effect_fn(x: int) -> int:
+            return x * 2
+
+        prop.side_effect = side_effect_fn
+
+        assert prop.side_effect is side_effect_fn
+        # Properties are accessed, not called
+        assert prop.side_effect(5) == 10
+
+    def test_side_effect_none(self) -> None:
+        """side_effect with None."""
+        mock = MagicMock()
+        prop: MockedProperty[str] = MockedProperty(mock)
+
+        prop.side_effect = None
+        assert prop.side_effect is None
+
+    def test_call_args(self) -> None:
+        """call_args property."""
+        mock = MagicMock()
+        prop: MockedProperty[str] = MockedProperty(mock)
+
+        assert prop.call_args is None
+
+        mock("arg1", kwarg1="value")
+        assert prop.call_args is not None
+
+    def test_call_args_list(self) -> None:
+        """call_args_list property."""
+        mock = MagicMock()
+        prop: MockedProperty[str] = MockedProperty(mock)
+
+        assert prop.call_args_list == []
+
+        mock("first")
+        mock("second")
+
+        assert len(prop.call_args_list) == 2
+
+    def test_assert_any_call(self) -> None:
+        """assert_any_call method."""
+        mock = MagicMock()
+        prop: MockedProperty[str] = MockedProperty(mock)
+
+        mock("a")
+        mock("b")
+
+        prop.assert_any_call("a")
+        prop.assert_any_call("b")
+
+    def test_assert_has_calls(self) -> None:
+        """assert_has_calls method."""
+        mock = MagicMock()
+        prop: MockedProperty[str] = MockedProperty(mock)
+
+
+
+        mock("first")
+        mock("second")
+
+        prop.assert_has_calls([call("first"), call("second")])
+
 
 class TestMockedClassMethod:
     """MockedClassMethod tests."""
@@ -230,6 +297,69 @@ class TestMockedClassMethod:
         method.reset_mock()
         assert method.call_count == 0
 
+    def test_call_args(self) -> None:
+        """call_args property."""
+        mock = MagicMock()
+        method: MockedClassMethod[[int], str] = MockedClassMethod(mock)
+
+        method(1)
+        assert method.call_args is not None
+
+    def test_call_args_list(self) -> None:
+        """call_args_list property."""
+        mock = MagicMock()
+        method: MockedClassMethod[[int], str] = MockedClassMethod(mock)
+
+        method(1)
+        method(2)
+
+        assert len(method.call_args_list) == 2
+
+    def test_assert_has_calls(self) -> None:
+        """assert_has_calls method."""
+        mock = MagicMock()
+        method: MockedClassMethod[[int], str] = MockedClassMethod(mock)
+
+
+
+        method(1)
+        method(2)
+
+        method.assert_has_calls([call(1), call(2)])
+
+    def test_side_effect_callable(self) -> None:
+        """side_effect with callable."""
+        mock = MagicMock()
+        method: MockedClassMethod[[int], int] = MockedClassMethod(mock)
+
+        def side_effect_fn(x: int) -> int:
+            return x * 10
+
+        method.side_effect = side_effect_fn
+
+        assert method(5) == 50
+
+    def test_side_effect_list(self) -> None:
+        """side_effect with list."""
+        mock = MagicMock()
+        method: MockedClassMethod[[], int] = MockedClassMethod(mock)
+
+        method.side_effect = [100, 200, 300]
+
+        assert method() == 100
+        assert method() == 200
+        assert method() == 300
+
+    def test_called_property(self) -> None:
+        """called property."""
+        mock = MagicMock()
+        method: MockedClassMethod[[int], str] = MockedClassMethod(mock)
+
+        assert method.called is False
+
+        method(1)
+        assert method.called is True
+
 
 class TestMockedStaticMethod:
     """MockedStaticMethod tests."""
@@ -315,12 +445,109 @@ class TestMockedStaticMethod:
         method.assert_any_call("first")
         method.assert_any_call("second")
 
-    def test_reset_mock(self) -> None:
-        """reset_mock method."""
+    def test_side_effect_callable(self) -> None:
+        """side_effect with callable."""
+        mock = MagicMock()
+        method: MockedStaticMethod[[int], int] = MockedStaticMethod(mock)
+
+        def side_effect_fn(x: int) -> int:
+            return x + 100
+
+        method.side_effect = side_effect_fn
+
+        assert method(50) == 150
+
+    def test_side_effect_list(self) -> None:
+        """side_effect with list."""
+        mock = MagicMock()
+        method: MockedStaticMethod[[], str] = MockedStaticMethod(mock)
+
+        method.side_effect = ["a", "b", "c"]
+
+        assert method() == "a"
+        assert method() == "b"
+        assert method() == "c"
+
+    def test_call_args(self) -> None:
+        """call_args property."""
+        mock = MagicMock()
+        method: MockedStaticMethod[[int], str] = MockedStaticMethod(mock)
+
+        method(42)
+        assert method.call_args is not None
+
+    def test_call_args_list(self) -> None:
+        """call_args_list property."""
         mock = MagicMock()
         method: MockedStaticMethod[[str], bool] = MockedStaticMethod(mock)
 
-        method("test")
+        method("a")
+        method("b")
+
+        assert len(method.call_args_list) == 2
+
+    def test_called_property(self) -> None:
+        """called property."""
+        mock = MagicMock()
+        method: MockedStaticMethod[[int], str] = MockedStaticMethod(mock)
+
+        assert method.called is False
+
+        method(1)
+        assert method.called is True
+
+    def test_assert_called(self) -> None:
+        """assert_called method."""
+        mock = MagicMock()
+        method: MockedStaticMethod[[int], str] = MockedStaticMethod(mock)
+
+        with pytest.raises(AssertionError):
+            method.assert_called()
+
+        method(1)
+        method.assert_called()
+
+    def test_assert_called_once(self) -> None:
+        """assert_called_once method."""
+        mock = MagicMock()
+        method: MockedStaticMethod[[int], str] = MockedStaticMethod(mock)
+
+        method(1)
+        method.assert_called_once()
+
+        method(2)
+        with pytest.raises(AssertionError):
+            method.assert_called_once()
+
+    def test_assert_has_calls(self) -> None:
+        """assert_has_calls method."""
+        mock = MagicMock()
+        method: MockedStaticMethod[[int], str] = MockedStaticMethod(mock)
+
+
+
+        method(1)
+        method(2)
+
+        method.assert_has_calls([call(1), call(2)])
+
+    def test_assert_not_called(self) -> None:
+        """assert_not_called method."""
+        mock = MagicMock()
+        method: MockedStaticMethod[[int], str] = MockedStaticMethod(mock)
+
+        method.assert_not_called()
+
+        method(1)
+        with pytest.raises(AssertionError):
+            method.assert_not_called()
+
+    def test_reset_mock(self) -> None:
+        """reset_mock method."""
+        mock = MagicMock()
+        method: MockedStaticMethod[[int], str] = MockedStaticMethod(mock)
+
+        method(1)
         assert method.call_count == 1
 
         method.reset_mock()
@@ -329,7 +556,7 @@ class TestMockedStaticMethod:
     def test_attribute_delegation(self) -> None:
         """Attribute delegation to internal mock."""
         mock = MagicMock()
-        method: MockedStaticMethod[[str], bool] = MockedStaticMethod(mock)
+        method: MockedStaticMethod[[int], str] = MockedStaticMethod(mock)
 
         assert hasattr(method, "mock_calls")
         assert method.mock_calls == []
