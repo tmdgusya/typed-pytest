@@ -40,9 +40,8 @@ Documentation = "https://github.com/your-org/typed-pytest#readme"
 Repository = "https://github.com/your-org/typed-pytest"
 Issues = "https://github.com/your-org/typed-pytest/issues"
 
-# Phase 2 (T201)에서 활성화 - typed_mocker fixture 구현 후
-# [project.entry-points.pytest11]
-# typed_pytest = "typed_pytest._fixtures"
+[project.entry-points.pytest11]
+typed_pytest = "typed_pytest._fixtures"
 
 [build-system]
 requires = ["hatchling"]
