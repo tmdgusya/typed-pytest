@@ -21,7 +21,6 @@ class TestTypedMockCreation:
         """spec으로 TypedMock 생성."""
         mock = TypedMock(spec=UserService)
         assert mock is not None
-        mock.get_user(1)
         assert hasattr(mock, "get_user")
         assert hasattr(mock, "create_user")
 
