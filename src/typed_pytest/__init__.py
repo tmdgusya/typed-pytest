@@ -12,17 +12,19 @@ Usage:
     mock_service.get_user.assert_called_once_with(1)
 """
 
+from typed_pytest._factory import typed_mock
+from typed_pytest._method import AsyncMockedMethod, MockedMethod
+from typed_pytest._mock import TypedMock
+from typed_pytest._protocols import AsyncMockProtocol, MockProtocol
 from typed_pytest._version import __version__
 
 
 __all__ = [
+    "AsyncMockProtocol",
+    "AsyncMockedMethod",
+    "MockProtocol",
+    "MockedMethod",
+    "TypedMock",
     "__version__",
-    # Phase 1에서 추가될 exports:
-    # "TypedMock",
-    # "MockedMethod",
-    # "typed_mock",
-    # "MockProtocol",
-    # Phase 2에서 추가될 exports:
-    # "TypedMocker",
-    # "typed_mocker",
+    "typed_mock",
 ]
