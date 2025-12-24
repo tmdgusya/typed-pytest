@@ -24,7 +24,6 @@ def typed_mock(
     /,
     *,
     spec_set: bool = False,
-    strict: bool = False,
     name: str | None = None,
     **kwargs: Any,
 ) -> TypedMock[T]: ...
@@ -35,7 +34,6 @@ def typed_mock(
     /,
     *,
     spec_set: bool = False,
-    strict: bool = False,
     name: str | None = None,
     **kwargs: Any,
 ) -> TypedMock[T]:
@@ -49,8 +47,6 @@ def typed_mock(
     Args:
         cls: Mock으로 만들 원본 클래스.
         spec_set: True일 경우 spec에 없는 속성 접근/설정 시 AttributeError 발생.
-            기본값은 False.
-        strict: True일 경우 호출되지 않은 mock에 대해 경고 (향후 구현 예정).
             기본값은 False.
         name: Mock의 이름 (디버깅용). 기본값은 None.
         **kwargs: MagicMock에 전달할 추가 인자.
@@ -81,7 +77,6 @@ def typed_mock(
     Note:
         - `spec_set=True`를 사용하면 원본 클래스에 없는 속성에 접근하거나
           설정할 때 AttributeError가 발생합니다. 이는 오타를 방지하는 데 유용합니다.
-        - `strict` 옵션은 현재 구현되지 않았으며, 향후 버전에서 추가될 예정입니다.
     """
     # cls가 클래스인지 확인 (런타임 타입 검사)
     # Note: pyright는 타입 힌트로 이미 type[T]임을 알지만,
@@ -89,11 +84,6 @@ def typed_mock(
     if not isinstance(cls, type):  # pyright: ignore[reportUnnecessaryIsInstance]
         msg = f"typed_mock() argument must be a class, not {type(cls).__name__!r}"
         raise TypeError(msg)
-
-    # strict 옵션은 향후 구현 예정
-    if strict:
-        # TODO: strict 모드 구현 (호출되지 않은 mock 경고)
-        pass
 
     # TypedMock 생성
     if spec_set:

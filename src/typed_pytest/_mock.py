@@ -6,12 +6,13 @@ TypedMock 제네릭 클래스.
 
 from __future__ import annotations
 
+import inspect
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 
 if TYPE_CHECKING:
-    from typed_pytest._method import MockedMethod
+    from typed_pytest._method import AsyncMockedMethod, MockedMethod
 
 
 T = TypeVar("T")
@@ -113,33 +114,45 @@ class TypedMock(MagicMock, Generic[T]):  # pyright: ignore[reportInconsistentCon
     if TYPE_CHECKING:
         # 타입 체커에게만 보이는 정의
         # 런타임에서는 MagicMock의 __getattr__가 처리
-        def __getattr__(self, name: str) -> MockedMethod[..., Any]:
-            """타입 체커에게 MockedMethod 반환을 알림.
+        def __getattr__(
+            self, name: str
+        ) -> MockedMethod[..., Any] | AsyncMockedMethod[..., Any]:
+            """타입 체커에게 MockedMethod 또는 AsyncMockedMethod 반환을 알림.
 
             실제 런타임에서는 MagicMock의 __getattr__가 호출되어
-            MagicMock 인스턴스를 반환합니다.
+            MagicMock 또는 AsyncMock 인스턴스를 반환합니다.
 
             Args:
                 name: 속성 이름.
 
             Returns:
-                MockedMethod 타입 (타입 체커용).
+                MockedMethod (동기) 또는 AsyncMockedMethod (비동기) 타입.
             """
             ...
 
     def _get_child_mock(self, **kwargs: Any) -> MagicMock:
-        """자식 Mock 생성 시 TypedMock이 아닌 MagicMock을 반환.
+        """자식 Mock 생성 시 async 메소드는 AsyncMock을 반환.
 
-        TypedMock의 속성에 접근할 때 생성되는 자식 Mock은
-        일반 MagicMock으로 충분합니다.
+        TypedMock의 속성에 접근할 때 생성되는 자식 Mock 중
+        async 메소드에 해당하는 경우 AsyncMock을 반환합니다.
 
         Args:
-            **kwargs: MagicMock 생성 인자.
+            **kwargs: MagicMock 생성 인자 (name 포함).
 
         Returns:
-            MagicMock 인스턴스.
+            AsyncMock (async 메소드) 또는 MagicMock 인스턴스.
         """
-        # MagicMock의 기본 동작 사용
+        # name이 제공되면 async 메소드인지 확인
+        name = kwargs.get("name")
+        if name and self.typed_class is not None:
+            # MRO를 순회하며 속성 찾기
+            for cls in self.typed_class.__mro__:
+                if name in cls.__dict__:
+                    attr = cls.__dict__[name]
+                    # async 메소드 감지
+                    if inspect.iscoroutinefunction(attr):
+                        return AsyncMock(**kwargs)
+                    break
         return MagicMock(**kwargs)
 
     @property
