@@ -130,12 +130,25 @@ warn_unused_configs = true
 show_error_codes = true
 show_column_numbers = true
 pretty = true
+# Enable additional error codes for stricter checking
+enable_error_code = [
+    "ignore-without-code",
+    "redundant-cast",
+    "truthy-bool",
+    "truthy-iterable",
+    "unused-awaitable",
+]
 
-# Per-module options
+# Per-module options for tests
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
+
+# Allow reveal_type tests without errors
+[[tool.mypy.overrides]]
+module = "tests.typecheck.mypy.test_reveal_type"
+warn_unused_ignores = false
 
 # ============================================================================
 # pyright configuration

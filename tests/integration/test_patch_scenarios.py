@@ -130,7 +130,7 @@ class TestNestedPatches:
 
         from tests.fixtures import sample_classes  # noqa: PLC0415
 
-        assert sample_classes.UserService.get_user(1) == {"id": 1}
+        assert sample_classes.UserService.get_user(1) == {"id": 1}  # type: ignore[call-arg, arg-type]
         assert os.getcwd() == "/combined"  # noqa: PTH109
 
     def test_patch_with_patch_dict(self, typed_mocker: TypedMocker) -> None:
@@ -145,7 +145,7 @@ class TestNestedPatches:
 
         from tests.fixtures import sample_classes  # noqa: PLC0415
 
-        assert sample_classes.UserService.get_user(1) == {"id": 1}
+        assert sample_classes.UserService.get_user(1) == {"id": 1}  # type: ignore[call-arg, arg-type]
         assert os.environ["CONFIG_VAR"] == "test"
 
 

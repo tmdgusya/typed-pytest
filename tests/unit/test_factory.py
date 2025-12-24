@@ -54,14 +54,14 @@ class TestTypedMockFactorySpecSet:
         mock = typed_mock(UserService, spec_set=True)
 
         with pytest.raises(AttributeError):
-            mock.nonexistent_attr = "value"  # type: ignore[attr-defined]
+            mock.nonexistent_attr = "value"
 
     def test_spec_set_false_allows_setting(self) -> None:
         """spec_set=False일 때 없는 속성 설정 가능."""
         mock = typed_mock(UserService, spec_set=False)
 
         # spec만 사용하면 속성 설정은 가능
-        mock.custom_attr = "value"  # type: ignore[attr-defined]
+        mock.custom_attr = "value"
         assert mock.custom_attr == "value"
 
 
@@ -101,18 +101,18 @@ class TestTypedMockFactoryErrors:
     def test_non_class_raises_type_error(self) -> None:
         """클래스가 아닌 값 전달 시 TypeError."""
         with pytest.raises(TypeError, match="must be a class"):
-            typed_mock("not a class")  # type: ignore[arg-type]
+            typed_mock("not a class")  # type: ignore[call-overload]
 
     def test_instance_raises_type_error(self) -> None:
         """인스턴스 전달 시 TypeError."""
         instance = UserService()
         with pytest.raises(TypeError, match="must be a class"):
-            typed_mock(instance)  # type: ignore[arg-type]
+            typed_mock(instance)  # type: ignore[call-overload]
 
     def test_none_raises_type_error(self) -> None:
         """None 전달 시 TypeError."""
         with pytest.raises(TypeError, match="must be a class"):
-            typed_mock(None)  # type: ignore[arg-type]
+            typed_mock(None)  # type: ignore[call-overload]
 
 
 class TestTypedMockFactoryStrict:

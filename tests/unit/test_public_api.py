@@ -1,5 +1,6 @@
 """공개 API 테스트."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
 import typed_pytest
@@ -146,7 +147,7 @@ class TestPublicAPIUsability:
     def test_mocked_method_wraps_magic_mock(self) -> None:
         """MockedMethod가 MagicMock을 래핑할 수 있는지 확인."""
         underlying_mock = MagicMock()
-        method = MockedMethod(underlying_mock)
+        method: MockedMethod[..., Any] = MockedMethod(underlying_mock)
 
         method("arg1", kwarg="value")
         underlying_mock.assert_called_once_with("arg1", kwarg="value")

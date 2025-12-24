@@ -138,7 +138,7 @@ class TestTypedMockerPatch:
         from tests.fixtures import sample_classes  # noqa: PLC0415
 
         # 패치된 클래스가 mock인지 확인
-        result = sample_classes.UserService.get_user(1)
+        result = sample_classes.UserService.get_user(1)  # type: ignore[call-arg, arg-type]
         assert result == {"id": 999}
 
 

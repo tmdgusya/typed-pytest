@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 
-from tests.fixtures.sample_classes import ProductRepository, UserService
+from tests.fixtures.sample_classes import Product, ProductRepository, UserService
 from typed_pytest._mock import TypedMock
 
 
@@ -48,7 +48,7 @@ class OrderService:
             "user_id": user_id,
             "product_id": product_id,
             "quantity": quantity,
-            "total": product.get("price", 0) * quantity,
+            "total": product.price * quantity,
         }
 
 
@@ -67,11 +67,11 @@ class TestServiceRepositoryPattern:
         mock_product_repo = typed_mocker.mock(ProductRepository)
 
         mock_user_service.get_user.return_value = {"id": 1, "name": "Test User"}
-        mock_product_repo.find_by_id.return_value = {
-            "id": "P001",
-            "name": "Test Product",
-            "price": 100,
-        }
+        mock_product_repo.find_by_id.return_value = Product(
+            id="P001",
+            name="Test Product",
+            price=100,
+        )
 
         order_service = OrderService(mock_user_service, mock_product_repo)
 
@@ -319,8 +319,8 @@ class TestPatchIntegration:
 
         from tests.fixtures import sample_classes  # noqa: PLC0415
 
-        # 패치된 클래스 사용
-        result = sample_classes.UserService.get_user(1)
+        # 패치된 클래스 사용 (패치 후에는 mock이 반환됨)
+        result = sample_classes.UserService.get_user(1)  # type: ignore[call-arg, arg-type]
         assert result["name"] == "Patched User"
 
     def test_patch_object_for_single_method(self, typed_mocker: TypedMocker) -> None:

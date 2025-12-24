@@ -13,6 +13,7 @@ from typed_pytest._method import MockedMethod
 
 
 if TYPE_CHECKING:
+    from collections.abc import MutableMapping
     from unittest.mock import MagicMock
 
     from pytest_mock import MockerFixture
@@ -218,11 +219,11 @@ class TypedMocker:
 
     def patch_dict(
         self,
-        in_dict: dict[str, Any] | str,
+        in_dict: MutableMapping[str, Any] | str,
         values: dict[str, Any] | None = None,
         clear: bool = False,
         **kwargs: Any,
-    ) -> dict[str, Any]:
+    ) -> MutableMapping[str, Any]:
         """딕셔너리를 patch합니다.
 
         mocker.patch.dict()를 래핑합니다.
@@ -246,7 +247,7 @@ class TypedMocker:
         if values is None:
             values = {}
         return cast(
-            "dict[str, Any]",
+            "MutableMapping[str, Any]",
             self._mocker.patch.dict(in_dict, values, clear=clear, **kwargs),
         )
 

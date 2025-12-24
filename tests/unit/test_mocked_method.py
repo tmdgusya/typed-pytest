@@ -1,5 +1,6 @@
 """MockedMethod 및 AsyncMockedMethod 테스트."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call
 
 import pytest
@@ -13,14 +14,14 @@ class TestMockedMethod:
     def test_creation(self) -> None:
         """MockedMethod 인스턴스 생성."""
         mock = MagicMock()
-        method: MockedMethod[[int], dict] = MockedMethod(mock)
+        method: MockedMethod[[int], dict[str, Any]] = MockedMethod(mock)
         assert method is not None
 
     def test_call_preserves_signature(self) -> None:
         """MockedMethod 호출이 원본 시그니처를 따르는지."""
         mock = MagicMock()
         mock.return_value = {"id": 1, "name": "Test"}
-        method: MockedMethod[[int], dict] = MockedMethod(mock)
+        method: MockedMethod[[int], dict[str, Any]] = MockedMethod(mock)
 
         result = method(1)
 
@@ -30,7 +31,7 @@ class TestMockedMethod:
     def test_call_with_kwargs(self) -> None:
         """키워드 인자로 호출."""
         mock = MagicMock()
-        method: MockedMethod[[str, str], dict] = MockedMethod(mock)
+        method: MockedMethod[..., dict[str, Any]] = MockedMethod(mock)
 
         method("John", email="john@example.com")
 
@@ -39,7 +40,7 @@ class TestMockedMethod:
     def test_return_value_has_correct_type(self) -> None:
         """return_value가 원본 반환 타입을 가지는지."""
         mock = MagicMock()
-        method: MockedMethod[[int], dict] = MockedMethod(mock)
+        method: MockedMethod[[int], dict[str, Any]] = MockedMethod(mock)
 
         method.return_value = {"id": 1}
         assert method.return_value == {"id": 1}
@@ -50,7 +51,7 @@ class TestMockedMethod:
     def test_side_effect_with_exception(self) -> None:
         """side_effect로 예외 설정."""
         mock = MagicMock()
-        method: MockedMethod[[int], dict] = MockedMethod(mock)
+        method: MockedMethod[[int], dict[str, Any]] = MockedMethod(mock)
 
         method.side_effect = ValueError("test error")
 
@@ -81,7 +82,7 @@ class TestMockedMethod:
     def test_assert_called(self) -> None:
         """assert_called 메소드."""
         mock = MagicMock()
-        method: MockedMethod[[int], dict] = MockedMethod(mock)
+        method: MockedMethod[[int], dict[str, Any]] = MockedMethod(mock)
 
         with pytest.raises(AssertionError):
             method.assert_called()
@@ -92,7 +93,7 @@ class TestMockedMethod:
     def test_assert_called_once(self) -> None:
         """assert_called_once 메소드."""
         mock = MagicMock()
-        method: MockedMethod[[int], dict] = MockedMethod(mock)
+        method: MockedMethod[[int], dict[str, Any]] = MockedMethod(mock)
 
         with pytest.raises(AssertionError):
             method.assert_called_once()
@@ -107,7 +108,7 @@ class TestMockedMethod:
     def test_assert_called_with_type_hints(self) -> None:
         """assert_called_with가 원본 파라미터 타입 힌트를 가지는지."""
         mock = MagicMock()
-        method: MockedMethod[[int, str], dict] = MockedMethod(mock)
+        method: MockedMethod[[int, str], dict[str, Any]] = MockedMethod(mock)
 
         method(1, "test")
         method.assert_called_with(1, "test")
@@ -118,7 +119,7 @@ class TestMockedMethod:
     def test_assert_called_once_with(self) -> None:
         """assert_called_once_with 메소드."""
         mock = MagicMock()
-        method: MockedMethod[[int], dict] = MockedMethod(mock)
+        method: MockedMethod[[int], dict[str, Any]] = MockedMethod(mock)
 
         method(1)
         method.assert_called_once_with(1)
@@ -126,7 +127,7 @@ class TestMockedMethod:
     def test_assert_any_call(self) -> None:
         """assert_any_call 메소드."""
         mock = MagicMock()
-        method: MockedMethod[[int], dict] = MockedMethod(mock)
+        method: MockedMethod[[int], dict[str, Any]] = MockedMethod(mock)
 
         method(1)
         method(2)
@@ -142,7 +143,7 @@ class TestMockedMethod:
     def test_assert_not_called(self) -> None:
         """assert_not_called 메소드."""
         mock = MagicMock()
-        method: MockedMethod[[int], dict] = MockedMethod(mock)
+        method: MockedMethod[[int], dict[str, Any]] = MockedMethod(mock)
 
         method.assert_not_called()
 
@@ -153,7 +154,7 @@ class TestMockedMethod:
     def test_assert_has_calls(self) -> None:
         """assert_has_calls 메소드."""
         mock = MagicMock()
-        method: MockedMethod[[int], dict] = MockedMethod(mock)
+        method: MockedMethod[[int], dict[str, Any]] = MockedMethod(mock)
 
         method(1)
         method(2)
@@ -164,7 +165,7 @@ class TestMockedMethod:
     def test_reset_mock(self) -> None:
         """reset_mock 메소드."""
         mock = MagicMock()
-        method: MockedMethod[[int], dict] = MockedMethod(mock)
+        method: MockedMethod[[int], dict[str, Any]] = MockedMethod(mock)
 
         method(1)
         assert method.call_count == 1
@@ -175,7 +176,7 @@ class TestMockedMethod:
     def test_call_count_property(self) -> None:
         """call_count 속성."""
         mock = MagicMock()
-        method: MockedMethod[[int], dict] = MockedMethod(mock)
+        method: MockedMethod[[int], dict[str, Any]] = MockedMethod(mock)
 
         assert method.call_count == 0
 
@@ -189,7 +190,7 @@ class TestMockedMethod:
     def test_called_property(self) -> None:
         """called 속성."""
         mock = MagicMock()
-        method: MockedMethod[[int], dict] = MockedMethod(mock)
+        method: MockedMethod[[int], dict[str, Any]] = MockedMethod(mock)
 
         assert method.called is False
 
@@ -199,7 +200,7 @@ class TestMockedMethod:
     def test_call_args_property(self) -> None:
         """call_args 속성."""
         mock = MagicMock()
-        method: MockedMethod[[int, str], dict] = MockedMethod(mock)
+        method: MockedMethod[[int, str], dict[str, Any]] = MockedMethod(mock)
 
         assert method.call_args is None
 
@@ -209,7 +210,7 @@ class TestMockedMethod:
     def test_call_args_list_property(self) -> None:
         """call_args_list 속성."""
         mock = MagicMock()
-        method: MockedMethod[[int], dict] = MockedMethod(mock)
+        method: MockedMethod[[int], dict[str, Any]] = MockedMethod(mock)
 
         assert method.call_args_list == []
 
@@ -220,7 +221,7 @@ class TestMockedMethod:
     def test_attribute_delegation(self) -> None:
         """속성 위임이 정상 동작하는지."""
         mock = MagicMock()
-        method: MockedMethod[[int], dict] = MockedMethod(mock)
+        method: MockedMethod[[int], dict[str, Any]] = MockedMethod(mock)
 
         # mock_calls는 MagicMock의 속성
         assert hasattr(method, "mock_calls")
@@ -233,14 +234,14 @@ class TestAsyncMockedMethod:
     def test_creation(self) -> None:
         """AsyncMockedMethod 인스턴스 생성."""
         mock = AsyncMock()
-        method: AsyncMockedMethod[[int], dict] = AsyncMockedMethod(mock)
+        method: AsyncMockedMethod[[int], dict[str, Any]] = AsyncMockedMethod(mock)
         assert method is not None
 
     async def test_async_call(self) -> None:
         """비동기 호출."""
         mock = AsyncMock()
         mock.return_value = {"id": 1}
-        method: AsyncMockedMethod[[int], dict] = AsyncMockedMethod(mock)
+        method: AsyncMockedMethod[[int], dict[str, Any]] = AsyncMockedMethod(mock)
 
         result = await method(1)
 
@@ -250,7 +251,7 @@ class TestAsyncMockedMethod:
     async def test_return_value(self) -> None:
         """return_value 속성."""
         mock = AsyncMock()
-        method: AsyncMockedMethod[[int], dict] = AsyncMockedMethod(mock)
+        method: AsyncMockedMethod[[int], dict[str, Any]] = AsyncMockedMethod(mock)
 
         method.return_value = {"id": 42}
         result = await method(1)
@@ -260,7 +261,7 @@ class TestAsyncMockedMethod:
     async def test_side_effect_exception(self) -> None:
         """side_effect로 예외 설정."""
         mock = AsyncMock()
-        method: AsyncMockedMethod[[int], dict] = AsyncMockedMethod(mock)
+        method: AsyncMockedMethod[[int], dict[str, Any]] = AsyncMockedMethod(mock)
 
         method.side_effect = ValueError("async error")
 
@@ -281,7 +282,7 @@ class TestAsyncMockedMethod:
     async def test_assert_awaited(self) -> None:
         """assert_awaited 메소드."""
         mock = AsyncMock()
-        method: AsyncMockedMethod[[int], dict] = AsyncMockedMethod(mock)
+        method: AsyncMockedMethod[[int], dict[str, Any]] = AsyncMockedMethod(mock)
 
         with pytest.raises(AssertionError):
             method.assert_awaited()
@@ -292,7 +293,7 @@ class TestAsyncMockedMethod:
     async def test_assert_awaited_once(self) -> None:
         """assert_awaited_once 메소드."""
         mock = AsyncMock()
-        method: AsyncMockedMethod[[int], dict] = AsyncMockedMethod(mock)
+        method: AsyncMockedMethod[[int], dict[str, Any]] = AsyncMockedMethod(mock)
 
         with pytest.raises(AssertionError):
             method.assert_awaited_once()
@@ -307,7 +308,7 @@ class TestAsyncMockedMethod:
     async def test_assert_awaited_with(self) -> None:
         """assert_awaited_with 메소드."""
         mock = AsyncMock()
-        method: AsyncMockedMethod[[int, str], dict] = AsyncMockedMethod(mock)
+        method: AsyncMockedMethod[[int, str], dict[str, Any]] = AsyncMockedMethod(mock)
 
         await method(1, "test")
         method.assert_awaited_with(1, "test")
@@ -318,7 +319,7 @@ class TestAsyncMockedMethod:
     async def test_assert_awaited_once_with(self) -> None:
         """assert_awaited_once_with 메소드."""
         mock = AsyncMock()
-        method: AsyncMockedMethod[[int], dict] = AsyncMockedMethod(mock)
+        method: AsyncMockedMethod[[int], dict[str, Any]] = AsyncMockedMethod(mock)
 
         await method(1)
         method.assert_awaited_once_with(1)
@@ -326,7 +327,7 @@ class TestAsyncMockedMethod:
     async def test_assert_any_await(self) -> None:
         """assert_any_await 메소드."""
         mock = AsyncMock()
-        method: AsyncMockedMethod[[int], dict] = AsyncMockedMethod(mock)
+        method: AsyncMockedMethod[[int], dict[str, Any]] = AsyncMockedMethod(mock)
 
         await method(1)
         await method(2)
@@ -340,7 +341,7 @@ class TestAsyncMockedMethod:
     async def test_assert_not_awaited(self) -> None:
         """assert_not_awaited 메소드."""
         mock = AsyncMock()
-        method: AsyncMockedMethod[[int], dict] = AsyncMockedMethod(mock)
+        method: AsyncMockedMethod[[int], dict[str, Any]] = AsyncMockedMethod(mock)
 
         method.assert_not_awaited()
 
@@ -351,7 +352,7 @@ class TestAsyncMockedMethod:
     async def test_assert_has_awaits(self) -> None:
         """assert_has_awaits 메소드."""
         mock = AsyncMock()
-        method: AsyncMockedMethod[[int], dict] = AsyncMockedMethod(mock)
+        method: AsyncMockedMethod[[int], dict[str, Any]] = AsyncMockedMethod(mock)
 
         await method(1)
         await method(2)
@@ -362,7 +363,7 @@ class TestAsyncMockedMethod:
     async def test_await_count_property(self) -> None:
         """await_count 속성."""
         mock = AsyncMock()
-        method: AsyncMockedMethod[[int], dict] = AsyncMockedMethod(mock)
+        method: AsyncMockedMethod[[int], dict[str, Any]] = AsyncMockedMethod(mock)
 
         assert method.await_count == 0
 
@@ -376,7 +377,7 @@ class TestAsyncMockedMethod:
     async def test_await_args_property(self) -> None:
         """await_args 속성."""
         mock = AsyncMock()
-        method: AsyncMockedMethod[[int, str], dict] = AsyncMockedMethod(mock)
+        method: AsyncMockedMethod[[int, str], dict[str, Any]] = AsyncMockedMethod(mock)
 
         assert method.await_args is None
 
@@ -386,7 +387,7 @@ class TestAsyncMockedMethod:
     async def test_await_args_list_property(self) -> None:
         """await_args_list 속성."""
         mock = AsyncMock()
-        method: AsyncMockedMethod[[int], dict] = AsyncMockedMethod(mock)
+        method: AsyncMockedMethod[[int], dict[str, Any]] = AsyncMockedMethod(mock)
 
         assert method.await_args_list == []
 
@@ -397,7 +398,7 @@ class TestAsyncMockedMethod:
     async def test_standard_assertions_also_work(self) -> None:
         """일반 assertion 메소드도 동작하는지."""
         mock = AsyncMock()
-        method: AsyncMockedMethod[[int], dict] = AsyncMockedMethod(mock)
+        method: AsyncMockedMethod[[int], dict[str, Any]] = AsyncMockedMethod(mock)
 
         method.assert_not_called()
 
@@ -409,7 +410,7 @@ class TestAsyncMockedMethod:
     async def test_reset_mock(self) -> None:
         """reset_mock 메소드."""
         mock = AsyncMock()
-        method: AsyncMockedMethod[[int], dict] = AsyncMockedMethod(mock)
+        method: AsyncMockedMethod[[int], dict[str, Any]] = AsyncMockedMethod(mock)
 
         await method(1)
         assert method.call_count == 1

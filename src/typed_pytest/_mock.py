@@ -159,13 +159,13 @@ class TypedMock(MagicMock, Generic[T]):  # pyright: ignore[reportInconsistentCon
             TypedMock의 repr 문자열.
         """
         typed_class = object.__getattribute__(self, "_typed_class")
-        name = self._mock_name
+        name: str | None = self._mock_name  # type: ignore[assignment]
 
         if typed_class is not None:
-            if name:
+            if name is not None:
                 return f"<TypedMock[{typed_class.__name__}] name='{name}'>"
             return f"<TypedMock[{typed_class.__name__}] id='{id(self)}'>"
 
-        if name:
+        if name is not None:
             return f"<TypedMock name='{name}'>"
         return f"<TypedMock id='{id(self)}'>"

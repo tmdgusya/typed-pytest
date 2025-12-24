@@ -82,7 +82,7 @@ class TestTypedMockerFixturePatch:
 
         from tests.fixtures import sample_classes  # noqa: PLC0415
 
-        result = sample_classes.UserService.get_user(1)
+        result = sample_classes.UserService.get_user(1)  # type: ignore[call-arg, arg-type]
 
         assert result == {"id": 999, "name": "Patched"}
 
@@ -187,7 +187,7 @@ class TestTypedMockerFixtureCleanup:
 
         from tests.fixtures import sample_classes  # noqa: PLC0415
 
-        assert sample_classes.UserService.get_user(1) == {"id": 111}
+        assert sample_classes.UserService.get_user(1) == {"id": 111}  # type: ignore[call-arg, arg-type]
 
     def test_patch_cleanup_between_tests_part2(self, typed_mocker: TypedMocker) -> None:
         """패치가 테스트 간에 정리되는지 확인 (Part 2).
@@ -203,4 +203,4 @@ class TestTypedMockerFixtureCleanup:
         from tests.fixtures import sample_classes  # noqa: PLC0415
 
         # Part 1의 값(111)이 아닌 이 테스트의 값(222)이어야 함
-        assert sample_classes.UserService.get_user(1) == {"id": 222}
+        assert sample_classes.UserService.get_user(1) == {"id": 222}  # type: ignore[call-arg, arg-type]

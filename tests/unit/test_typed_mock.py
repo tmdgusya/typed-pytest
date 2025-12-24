@@ -31,7 +31,7 @@ class TestTypedMockCreation:
 
         # spec_set은 없는 속성 설정을 막음
         with pytest.raises(AttributeError):
-            mock.nonexistent_method = "value"  # type: ignore[attr-defined]
+            mock.nonexistent_method = "value"
 
     def test_creation_with_name(self) -> None:
         """name으로 TypedMock 생성."""
