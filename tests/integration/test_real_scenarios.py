@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 import pytest
 
 from tests.fixtures.sample_classes import ProductRepository, UserService
-from typed_pytest._mock import TypedMock
+from typed_pytest import TypedMock
 
 
 if TYPE_CHECKING:

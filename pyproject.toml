@@ -159,7 +159,6 @@ reportUnusedFunction = true
 reportUnusedVariable = true
 reportDuplicateImport = true
 # MagicMock의 __new__와 TypedMock의 __init__ 시그니처 불일치 허용
-# (MagicMock 상속 시 불가피한 문제)
 reportInconsistentConstructor = false
 
 # ============================================================================
