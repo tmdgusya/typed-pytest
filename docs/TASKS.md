@@ -1068,9 +1068,9 @@ class TestNestedMock:
 | T201 | Claude | DONE | typed_mocker fixture 구현 완료 |
 | T202 | Claude | DONE | patch_object, patch_dict 메소드 구현 완료 |
 | T203 | Claude | DONE | 실제 사용 시나리오 통합 테스트 완료 |
-| T300 | - | BACKLOG | |
-| T301 | - | BACKLOG | |
-| T302 | - | BACKLOG | |
+| T300 | Claude | DONE | async 메소드 타입 테스트 추가 |
+| T301 | Claude | DONE | async 메소드 타입 테스트 추가 (T300과 동일) |
+| T302 | Claude | SKIP | 별도 스텁 불필요, inline 타입 애너테이션 충분 |
 | T400 | - | BACKLOG | |
 | T401 | - | BACKLOG | |
 | T402 | - | BACKLOG | |
