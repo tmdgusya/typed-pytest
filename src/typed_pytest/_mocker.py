@@ -165,6 +165,91 @@ class TypedMocker:
         spy_mock = self._mocker.spy(obj, name)
         return MockedMethod(spy_mock)
 
+    @overload
+    def patch_object(
+        self,
+        target: object,
+        attribute: str,
+        *,
+        new: type[T],
+        **kwargs: Any,
+    ) -> TypedMock[T]: ...
+
+    @overload
+    def patch_object(
+        self,
+        target: object,
+        attribute: str,
+        **kwargs: Any,
+    ) -> MagicMock: ...
+
+    def patch_object(
+        self,
+        target: object,
+        attribute: str,
+        *,
+        new: type[Any] | None = None,
+        **kwargs: Any,
+    ) -> TypedMock[Any] | MagicMock:
+        """객체의 속성을 타입 안전하게 patch합니다.
+
+        mocker.patch.object()를 래핑하여 타입 안전한 mock을 제공합니다.
+
+        Args:
+            target: patch할 객체.
+            attribute: patch할 속성 이름.
+            new: Mock의 spec으로 사용할 클래스 (선택).
+            **kwargs: mocker.patch.object()에 전달할 추가 인자.
+
+        Returns:
+            TypedMock[T] (new 지정 시) 또는 MagicMock.
+
+        Example:
+            >>> import os
+            >>> mock = typed_mocker.patch_object(os, "getcwd")
+            >>> mock.return_value = "/mocked/path"
+            >>> os.getcwd()
+            '/mocked/path'
+        """
+        if new is not None:
+            mock_instance = typed_mock(new)
+            return self._mocker.patch.object(target, attribute, mock_instance, **kwargs)
+        return cast("MagicMock", self._mocker.patch.object(target, attribute, **kwargs))
+
+    def patch_dict(
+        self,
+        in_dict: dict[str, Any] | str,
+        values: dict[str, Any] | None = None,
+        clear: bool = False,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """딕셔너리를 patch합니다.
+
+        mocker.patch.dict()를 래핑합니다.
+        테스트 종료 시 자동으로 원래 값으로 복원됩니다.
+
+        Args:
+            in_dict: patch할 딕셔너리 또는 딕셔너리를 가리키는 문자열.
+            values: 딕셔너리에 설정할 값들.
+            clear: True면 기존 딕셔너리를 비우고 values만 설정.
+            **kwargs: 딕셔너리에 설정할 추가 키-값 쌍.
+
+        Returns:
+            patch된 딕셔너리.
+
+        Example:
+            >>> import os
+            >>> typed_mocker.patch_dict(os.environ, {"MY_VAR": "test"})
+            >>> os.environ["MY_VAR"]
+            'test'
+        """
+        if values is None:
+            values = {}
+        return cast(
+            "dict[str, Any]",
+            self._mocker.patch.dict(in_dict, values, clear=clear, **kwargs),
+        )
+
     @property
     def mocker(self) -> MockerFixture:
         """원본 MockerFixture에 접근합니다.
