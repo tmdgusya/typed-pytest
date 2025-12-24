@@ -208,7 +208,7 @@ class MockedMethod(Generic[P, R]):
         return getattr(self._mock, "await_count", 0)
 
     @property
-    def await_args(self) -> None:
+    def await_args(self) -> Any | None:
         """Last await arguments (async Mock compatibility).
 
         Returns None for sync Mocks.

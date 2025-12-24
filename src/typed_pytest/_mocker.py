@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
     from pytest_mock import MockerFixture
 
-    from typed_pytest._mock import TypedMock
+    from typed_pytest import TypedMock
 
 
 T = TypeVar("T")
