@@ -1,8 +1,8 @@
 """
-MockedMethod 제네릭 클래스.
+MockedMethod generic class.
 
-원본 메소드의 시그니처(ParamSpec P, 반환 타입 R)를 보존하면서
-Mock 기능을 제공하는 클래스입니다.
+Provides Mock functionality while preserving the original method's signature
+(ParamSpec P, return type R).
 """
 
 from __future__ import annotations
@@ -20,14 +20,14 @@ R = TypeVar("R")
 
 
 class MockedMethod(Generic[P, R]):
-    """원본 메소드의 시그니처를 보존하면서 Mock 기능을 제공하는 클래스.
+    """Provides Mock functionality while preserving the original method's signature.
 
-    타입 체커에게:
-    - __call__: 원본 메소드와 동일한 시그니처 (P.args, P.kwargs) -> R
-    - assert_*: 원본 파라미터 타입으로 검증
-    - return_value: 원본 반환 타입 R
+    To type checkers:
+    - __call__: Same signature as original method (P.args, P.kwargs) -> R
+    - assert_*: Validates with original parameter types
+    - return_value: Original return type R
 
-    런타임에서는 MagicMock을 래핑하여 실제 Mock 기능을 제공합니다.
+    At runtime, wraps MagicMock to provide actual Mock functionality.
 
     Example:
         >>> from unittest.mock import MagicMock
@@ -39,17 +39,17 @@ class MockedMethod(Generic[P, R]):
         >>> method.assert_called_once_with(1)
 
     Note:
-        이 클래스는 일반적으로 직접 사용하지 않고,
-        TypedMock[T]를 통해 자동으로 생성됩니다.
+        This class is typically not used directly,
+        but is automatically created through TypedMock[T].
     """
 
     __slots__ = ("_mock",)
 
     def __init__(self, mock: MagicMock) -> None:
-        """MockedMethod 인스턴스를 생성합니다.
+        """Creates a MockedMethod instance.
 
         Args:
-            mock: 래핑할 MagicMock 인스턴스.
+            mock: The MagicMock instance to wrap.
         """
         object.__setattr__(self, "_mock", mock)
 
@@ -58,84 +58,84 @@ class MockedMethod(Generic[P, R]):
     # =========================================================================
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
-        """원본 메소드와 동일한 시그니처로 호출합니다.
+        """Calls with the same signature as the original method.
 
         Args:
-            *args: 원본 메소드의 위치 인자.
-            **kwargs: 원본 메소드의 키워드 인자.
+            *args: Positional arguments of the original method.
+            **kwargs: Keyword arguments of the original method.
 
         Returns:
-            Mock의 return_value 또는 side_effect 결과.
+            The Mock's return_value or side_effect result.
         """
         return self._mock(*args, **kwargs)  # type: ignore[no-any-return]
 
     # =========================================================================
-    # Assertion methods - 원본 시그니처 보존
+    # Assertion methods - preserving original signature
     # =========================================================================
 
     def assert_called(self) -> None:
-        """Mock이 한 번 이상 호출되었는지 확인.
+        """Verifies that the Mock was called at least once.
 
         Raises:
-            AssertionError: 한 번도 호출되지 않은 경우.
+            AssertionError: If never called.
         """
         self._mock.assert_called()
 
     def assert_called_once(self) -> None:
-        """Mock이 정확히 한 번 호출되었는지 확인.
+        """Verifies that the Mock was called exactly once.
 
         Raises:
-            AssertionError: 호출 횟수가 1이 아닌 경우.
+            AssertionError: If call count is not 1.
         """
         self._mock.assert_called_once()
 
     def assert_called_with(self, *args: P.args, **kwargs: P.kwargs) -> None:
-        """Mock이 지정된 인자로 호출되었는지 확인 (마지막 호출 기준).
+        """Verifies that the Mock was called with the specified arguments (last call).
 
-        타입 체커는 원본 메소드의 파라미터 타입을 검사합니다.
+        Type checkers validate against the original method's parameter types.
 
         Args:
-            *args: 예상되는 위치 인자 (원본 메소드 시그니처).
-            **kwargs: 예상되는 키워드 인자 (원본 메소드 시그니처).
+            *args: Expected positional arguments (original method signature).
+            **kwargs: Expected keyword arguments (original method signature).
 
         Raises:
-            AssertionError: 마지막 호출 인자가 일치하지 않는 경우.
+            AssertionError: If the last call's arguments don't match.
         """
         self._mock.assert_called_with(*args, **kwargs)
 
     def assert_called_once_with(self, *args: P.args, **kwargs: P.kwargs) -> None:
-        """Mock이 정확히 한 번, 지정된 인자로 호출되었는지 확인.
+        """Verifies that the Mock was called exactly once with the specified arguments.
 
-        타입 체커는 원본 메소드의 파라미터 타입을 검사합니다.
+        Type checkers validate against the original method's parameter types.
 
         Args:
-            *args: 예상되는 위치 인자 (원본 메소드 시그니처).
-            **kwargs: 예상되는 키워드 인자 (원본 메소드 시그니처).
+            *args: Expected positional arguments (original method signature).
+            **kwargs: Expected keyword arguments (original method signature).
 
         Raises:
-            AssertionError: 호출 횟수가 1이 아니거나 인자가 일치하지 않는 경우.
+            AssertionError: If call count is not 1 or arguments don't match.
         """
         self._mock.assert_called_once_with(*args, **kwargs)
 
     def assert_any_call(self, *args: P.args, **kwargs: P.kwargs) -> None:
-        """Mock이 지정된 인자로 한 번이라도 호출되었는지 확인.
+        """Verifies that the Mock was called with the specified arguments at least once.
 
-        타입 체커는 원본 메소드의 파라미터 타입을 검사합니다.
+        Type checkers validate against the original method's parameter types.
 
         Args:
-            *args: 예상되는 위치 인자 (원본 메소드 시그니처).
-            **kwargs: 예상되는 키워드 인자 (원본 메소드 시그니처).
+            *args: Expected positional arguments (original method signature).
+            **kwargs: Expected keyword arguments (original method signature).
 
         Raises:
-            AssertionError: 해당 인자로 호출된 적이 없는 경우.
+            AssertionError: If never called with those arguments.
         """
         self._mock.assert_any_call(*args, **kwargs)
 
     def assert_not_called(self) -> None:
-        """Mock이 호출되지 않았는지 확인.
+        """Verifies that the Mock was never called.
 
         Raises:
-            AssertionError: 한 번이라도 호출된 경우.
+            AssertionError: If called at least once.
         """
         self._mock.assert_not_called()
 
@@ -144,82 +144,82 @@ class MockedMethod(Generic[P, R]):
         calls: list[Any],
         any_order: bool = False,
     ) -> None:
-        """Mock이 지정된 호출 목록대로 호출되었는지 확인.
+        """Verifies that the Mock was called with the specified list of calls.
 
         Args:
-            calls: 예상되는 호출 목록 (unittest.mock.call 객체들).
-            any_order: True면 순서 무시, False면 순서 일치 필요.
+            calls: Expected list of calls (unittest.mock.call objects).
+            any_order: If True, order is ignored; if False, order must match.
 
         Raises:
-            AssertionError: 호출 목록이 일치하지 않는 경우.
+            AssertionError: If the call list doesn't match.
         """
         self._mock.assert_has_calls(calls, any_order=any_order)
 
     # =============================================================================
-    # Async Assertion Methods - async Mock과의 호환성을 위해 추가
+    # Async Assertion Methods - added for compatibility with async Mocks
     # =============================================================================
 
     def assert_awaited(self) -> None:
-        """Mock이 await되었는지 확인 (async Mock 호환성).
+        """Verifies that the Mock was awaited (async Mock compatibility).
 
-        sync Mock에서는 항상 통과합니다.
+        Always passes for sync Mocks.
         """
         if hasattr(self._mock, "assert_awaited"):
             self._mock.assert_awaited()
 
     def assert_awaited_once(self) -> None:
-        """Mock이 정확히 한 번 await되었는지 확인 (async Mock 호환성).
+        """Verifies that the Mock was awaited exactly once (async Mock compatibility).
 
-        sync Mock에서는 항상 통과합니다.
+        Always passes for sync Mocks.
         """
         if hasattr(self._mock, "assert_awaited_once"):
             self._mock.assert_awaited_once()
 
     def assert_awaited_with(self, *args: Any, **kwargs: Any) -> None:
-        """Mock이 지정된 인자로 await되었는지 확인 (async Mock 호환성).
+        """Verifies that the Mock was awaited with the specified arguments (async Mock compatibility).
 
-        sync Mock에서는 항상 통과합니다.
+        Always passes for sync Mocks.
         """
         if hasattr(self._mock, "assert_awaited_with"):
             self._mock.assert_awaited_with(*args, **kwargs)
 
     def assert_awaited_once_with(self, *args: Any, **kwargs: Any) -> None:
-        """Mock이 정확히 한 번, 지정된 인자로 await되었는지 확인 (async Mock 호환성).
+        """Verifies that the Mock was awaited exactly once with specified args (async Mock compatibility).
 
-        sync Mock에서는 항상 통과합니다.
+        Always passes for sync Mocks.
         """
         if hasattr(self._mock, "assert_awaited_once_with"):
             self._mock.assert_awaited_once_with(*args, **kwargs)
 
     def assert_has_awaits(self, calls: list[Any], any_order: bool = False) -> None:
-        """Mock이 지정된 호출 목록대로 await되었는지 확인 (async Mock 호환성).
+        """Verifies that the Mock was awaited with the specified call list (async Mock compatibility).
 
-        sync Mock에서는 항상 통과합니다.
+        Always passes for sync Mocks.
         """
         if hasattr(self._mock, "assert_has_awaits"):
             self._mock.assert_has_awaits(calls, any_order=any_order)
 
     @property
     def await_count(self) -> int:
-        """Mock이 await된 횟수 (async Mock 호환성).
+        """Number of times the Mock was awaited (async Mock compatibility).
 
-        sync Mock에서는 0을 반환합니다.
+        Returns 0 for sync Mocks.
         """
         return getattr(self._mock, "await_count", 0)
 
     @property
-    def await_args(self) -> Any:
-        """마지막 await 인자 (async Mock 호환성).
+    def await_args(self) -> None:
+        """Last await arguments (async Mock compatibility).
 
-        sync Mock에서는 None을 반환합니다.
+        Returns None for sync Mocks.
         """
         return getattr(self._mock, "await_args", None)
 
     @property
     def await_args_list(self) -> list[Any]:
-        """모든 await 인자 목록 (async Mock 호환성).
+        """List of all await arguments (async Mock compatibility).
 
-        sync Mock에서는 빈 목록을 반환합니다.
+        Returns an empty list for sync Mocks.
         """
         return getattr(self._mock, "await_args_list", [])
 
@@ -229,45 +229,45 @@ class MockedMethod(Generic[P, R]):
         return_value: bool = False,
         side_effect: bool = False,
     ) -> None:
-        """Mock의 호출 기록을 초기화.
+        """Resets the Mock's call history.
 
         Args:
-            return_value: True면 return_value도 초기화.
-            side_effect: True면 side_effect도 초기화.
+            return_value: If True, also resets return_value.
+            side_effect: If True, also resets side_effect.
         """
         self._mock.reset_mock(return_value=return_value, side_effect=side_effect)
 
     # =========================================================================
-    # Properties - 원본 반환 타입 보존
+    # Properties - preserving original return type
     # =========================================================================
 
     @property
     def return_value(self) -> R:
-        """Mock 호출 시 반환할 값.
+        """Value to return when the Mock is called.
 
-        타입 체커는 원본 메소드의 반환 타입 R을 인식합니다.
+        Type checkers recognize the original method's return type R.
         """
         return self._mock.return_value  # type: ignore[no-any-return]
 
     @return_value.setter
     def return_value(self, value: R) -> None:
-        """Mock 호출 시 반환할 값 설정.
+        """Sets the value to return when the Mock is called.
 
-        타입 체커는 원본 메소드의 반환 타입 R을 검사합니다.
+        Type checkers validate against the original method's return type R.
 
         Args:
-            value: 설정할 반환 값 (타입 R).
+            value: The return value to set (type R).
         """
         self._mock.return_value = value
 
     @property
     def side_effect(self) -> Callable[P, R] | BaseException | list[Any] | None:
-        """Mock 호출 시 발생시킬 부수 효과.
+        """Side effect to raise when the Mock is called.
 
-        - Callable: 호출 시 실행될 함수 (원본 시그니처 P -> R).
-        - Exception: 호출 시 발생시킬 예외.
-        - list: 순차적으로 반환할 값들의 리스트.
-        - None: 부수 효과 없음 (return_value 사용).
+        - Callable: Function to execute when called (original signature P -> R).
+        - Exception: Exception to raise when called.
+        - list: List of values to return sequentially.
+        - None: No side effect (use return_value).
         """
         return self._mock.side_effect  # type: ignore[no-any-return]
 
@@ -276,36 +276,36 @@ class MockedMethod(Generic[P, R]):
         self,
         value: Callable[P, R] | BaseException | list[Any] | None,
     ) -> None:
-        """Mock 호출 시 발생시킬 부수 효과 설정.
+        """Sets the side effect to raise when the Mock is called.
 
         Args:
-            value: 부수 효과 (함수, 예외, 값 리스트, 또는 None).
+            value: The side effect (function, exception, list of values, or None).
         """
         self._mock.side_effect = value
 
     @property
     def call_count(self) -> int:
-        """Mock이 호출된 횟수."""
+        """Number of times the Mock was called."""
         return cast("int", self._mock.call_count)
 
     @property
     def called(self) -> bool:
-        """Mock이 한 번 이상 호출되었는지 여부."""
+        """Whether the Mock was called at least once."""
         return cast("bool", self._mock.called)
 
     @property
     def call_args(self) -> Any:
-        """마지막 호출의 인자. 호출된 적 없으면 None.
+        """Arguments of the last call. None if never called.
 
-        반환값은 unittest.mock.call 객체입니다.
+        The return value is a unittest.mock.call object.
         """
         return cast("Any", self._mock.call_args)
 
     @property
     def call_args_list(self) -> list[Any]:
-        """모든 호출의 인자 목록.
+        """List of arguments for all calls.
 
-        각 항목은 unittest.mock.call 객체입니다.
+        Each item is a unittest.mock.call object.
         """
         result: list[Any] = list(self._mock.call_args_list)
         return result
@@ -315,22 +315,22 @@ class MockedMethod(Generic[P, R]):
     # =========================================================================
 
     def __getattr__(self, name: str) -> Any:
-        """정의되지 않은 속성은 내부 Mock으로 위임합니다.
+        """Delegates undefined attributes to the internal Mock.
 
         Args:
-            name: 속성 이름.
+            name: Attribute name.
 
         Returns:
-            내부 Mock의 해당 속성.
+            The corresponding attribute from the internal Mock.
         """
         return getattr(self._mock, name)
 
     def __setattr__(self, name: str, value: Any) -> None:
-        """속성 설정을 내부 Mock으로 위임합니다.
+        """Delegates attribute setting to the internal Mock.
 
         Args:
-            name: 속성 이름.
-            value: 설정할 값.
+            name: Attribute name.
+            value: Value to set.
         """
         if name == "_mock":
             object.__setattr__(self, name, value)
@@ -342,29 +342,29 @@ class MockedMethod(Generic[P, R]):
     # =========================================================================
 
     if TYPE_CHECKING:
-        # 타입 체커에게만 보이는 정의
-        # 런타임에서는 __getattr__로 처리됨
+        # Only visible to type checkers
+        # At runtime, handled by __getattr__
         @property
         def configure_mock(self) -> Callable[..., None]:
-            """Mock 설정 메소드."""
+            """Mock configuration method."""
             ...
 
         @property
         def mock_calls(self) -> list[Any]:
-            """모든 Mock 호출 목록."""
+            """List of all Mock calls."""
             ...
 
         @property
         def method_calls(self) -> list[Any]:
-            """메소드 호출 목록."""
+            """List of method calls."""
             ...
 
 
 class AsyncMockedMethod(Generic[P, R]):
-    """비동기 메소드를 위한 MockedMethod.
+    """MockedMethod for async methods.
 
-    MockedMethod와 동일한 인터페이스를 제공하며,
-    추가로 비동기 전용 assertion 메소드를 포함합니다.
+    Provides the same interface as MockedMethod,
+    and includes additional async-specific assertion methods.
 
     Example:
         >>> from unittest.mock import AsyncMock
@@ -380,10 +380,10 @@ class AsyncMockedMethod(Generic[P, R]):
     __slots__ = ("_mock",)
 
     def __init__(self, mock: MagicMock) -> None:
-        """AsyncMockedMethod 인스턴스를 생성합니다.
+        """Creates an AsyncMockedMethod instance.
 
         Args:
-            mock: 래핑할 AsyncMock 인스턴스.
+            mock: The AsyncMock instance to wrap.
         """
         object.__setattr__(self, "_mock", mock)
 
@@ -392,14 +392,14 @@ class AsyncMockedMethod(Generic[P, R]):
     # =========================================================================
 
     async def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
-        """원본 비동기 메소드와 동일한 시그니처로 호출합니다.
+        """Calls with the same signature as the original async method.
 
         Args:
-            *args: 원본 메소드의 위치 인자.
-            **kwargs: 원본 메소드의 키워드 인자.
+            *args: Positional arguments of the original method.
+            **kwargs: Keyword arguments of the original method.
 
         Returns:
-            Mock의 return_value 또는 side_effect 결과.
+            The Mock's return_value or side_effect result.
         """
         return await self._mock(*args, **kwargs)  # type: ignore[no-any-return]
 
@@ -408,27 +408,27 @@ class AsyncMockedMethod(Generic[P, R]):
     # =========================================================================
 
     def assert_called(self) -> None:
-        """Mock이 한 번 이상 호출되었는지 확인."""
+        """Verifies that the Mock was called at least once."""
         self._mock.assert_called()
 
     def assert_called_once(self) -> None:
-        """Mock이 정확히 한 번 호출되었는지 확인."""
+        """Verifies that the Mock was called exactly once."""
         self._mock.assert_called_once()
 
     def assert_called_with(self, *args: P.args, **kwargs: P.kwargs) -> None:
-        """Mock이 지정된 인자로 호출되었는지 확인."""
+        """Verifies that the Mock was called with the specified arguments."""
         self._mock.assert_called_with(*args, **kwargs)
 
     def assert_called_once_with(self, *args: P.args, **kwargs: P.kwargs) -> None:
-        """Mock이 정확히 한 번, 지정된 인자로 호출되었는지 확인."""
+        """Verifies that the Mock was called exactly once with the specified arguments."""
         self._mock.assert_called_once_with(*args, **kwargs)
 
     def assert_any_call(self, *args: P.args, **kwargs: P.kwargs) -> None:
-        """Mock이 지정된 인자로 한 번이라도 호출되었는지 확인."""
+        """Verifies that the Mock was called with the specified arguments at least once."""
         self._mock.assert_any_call(*args, **kwargs)
 
     def assert_not_called(self) -> None:
-        """Mock이 호출되지 않았는지 확인."""
+        """Verifies that the Mock was never called."""
         self._mock.assert_not_called()
 
     def reset_mock(
@@ -437,7 +437,7 @@ class AsyncMockedMethod(Generic[P, R]):
         return_value: bool = False,
         side_effect: bool = False,
     ) -> None:
-        """Mock의 호출 기록을 초기화."""
+        """Resets the Mock's call history."""
         self._mock.reset_mock(return_value=return_value, side_effect=side_effect)
 
     # =========================================================================
@@ -445,68 +445,68 @@ class AsyncMockedMethod(Generic[P, R]):
     # =========================================================================
 
     def assert_awaited(self) -> None:
-        """Mock이 한 번 이상 await되었는지 확인.
+        """Verifies that the Mock was awaited at least once.
 
         Raises:
-            AssertionError: 한 번도 await되지 않은 경우.
+            AssertionError: If never awaited.
         """
         self._mock.assert_awaited()
 
     def assert_awaited_once(self) -> None:
-        """Mock이 정확히 한 번 await되었는지 확인.
+        """Verifies that the Mock was awaited exactly once.
 
         Raises:
-            AssertionError: await 횟수가 1이 아닌 경우.
+            AssertionError: If await count is not 1.
         """
         self._mock.assert_awaited_once()
 
     def assert_awaited_with(self, *args: P.args, **kwargs: P.kwargs) -> None:
-        """Mock이 지정된 인자로 await되었는지 확인.
+        """Verifies that the Mock was awaited with the specified arguments.
 
-        타입 체커는 원본 메소드의 파라미터 타입을 검사합니다.
+        Type checkers validate against the original method's parameter types.
 
         Args:
-            *args: 예상되는 위치 인자.
-            **kwargs: 예상되는 키워드 인자.
+            *args: Expected positional arguments.
+            **kwargs: Expected keyword arguments.
 
         Raises:
-            AssertionError: 마지막 await 인자가 일치하지 않는 경우.
+            AssertionError: If the last await arguments don't match.
         """
         self._mock.assert_awaited_with(*args, **kwargs)
 
     def assert_awaited_once_with(self, *args: P.args, **kwargs: P.kwargs) -> None:
-        """Mock이 정확히 한 번, 지정된 인자로 await되었는지 확인.
+        """Verifies that the Mock was awaited exactly once with specified arguments.
 
-        타입 체커는 원본 메소드의 파라미터 타입을 검사합니다.
+        Type checkers validate against the original method's parameter types.
 
         Args:
-            *args: 예상되는 위치 인자.
-            **kwargs: 예상되는 키워드 인자.
+            *args: Expected positional arguments.
+            **kwargs: Expected keyword arguments.
 
         Raises:
-            AssertionError: await 횟수가 1이 아니거나 인자가 일치하지 않는 경우.
+            AssertionError: If await count is not 1 or arguments don't match.
         """
         self._mock.assert_awaited_once_with(*args, **kwargs)
 
     def assert_any_await(self, *args: P.args, **kwargs: P.kwargs) -> None:
-        """Mock이 지정된 인자로 한 번이라도 await되었는지 확인.
+        """Verifies that the Mock was awaited with the specified arguments at least once.
 
-        타입 체커는 원본 메소드의 파라미터 타입을 검사합니다.
+        Type checkers validate against the original method's parameter types.
 
         Args:
-            *args: 예상되는 위치 인자.
-            **kwargs: 예상되는 키워드 인자.
+            *args: Expected positional arguments.
+            **kwargs: Expected keyword arguments.
 
         Raises:
-            AssertionError: 해당 인자로 await된 적이 없는 경우.
+            AssertionError: If never awaited with those arguments.
         """
         self._mock.assert_any_await(*args, **kwargs)
 
     def assert_not_awaited(self) -> None:
-        """Mock이 await되지 않았는지 확인.
+        """Verifies that the Mock was never awaited.
 
         Raises:
-            AssertionError: 한 번이라도 await된 경우.
+            AssertionError: If awaited at least once.
         """
         self._mock.assert_not_awaited()
 
@@ -515,14 +515,14 @@ class AsyncMockedMethod(Generic[P, R]):
         calls: list[Any],
         any_order: bool = False,
     ) -> None:
-        """Mock이 지정된 await 목록대로 await되었는지 확인.
+        """Verifies that the Mock was awaited with the specified await list.
 
         Args:
-            calls: 예상되는 await 목록.
-            any_order: True면 순서 무시.
+            calls: Expected await list.
+            any_order: If True, order is ignored.
 
         Raises:
-            AssertionError: await 목록이 일치하지 않는 경우.
+            AssertionError: If the await list doesn't match.
         """
         self._mock.assert_has_awaits(calls, any_order=any_order)
 
@@ -532,17 +532,17 @@ class AsyncMockedMethod(Generic[P, R]):
 
     @property
     def return_value(self) -> R:
-        """Mock 호출 시 반환할 값."""
+        """Value to return when the Mock is called."""
         return self._mock.return_value  # type: ignore[no-any-return]
 
     @return_value.setter
     def return_value(self, value: R) -> None:
-        """Mock 호출 시 반환할 값 설정."""
+        """Sets the value to return when the Mock is called."""
         self._mock.return_value = value
 
     @property
     def side_effect(self) -> Callable[P, R] | BaseException | list[Any] | None:
-        """Mock 호출 시 발생시킬 부수 효과."""
+        """Side effect to raise when the Mock is called."""
         return self._mock.side_effect  # type: ignore[no-any-return]
 
     @side_effect.setter
@@ -550,42 +550,42 @@ class AsyncMockedMethod(Generic[P, R]):
         self,
         value: Callable[P, R] | BaseException | list[Any] | None,
     ) -> None:
-        """Mock 호출 시 발생시킬 부수 효과 설정."""
+        """Sets the side effect to raise when the Mock is called."""
         self._mock.side_effect = value
 
     @property
     def call_count(self) -> int:
-        """Mock이 호출된 횟수."""
+        """Number of times the Mock was called."""
         return cast("int", self._mock.call_count)
 
     @property
     def called(self) -> bool:
-        """Mock이 한 번 이상 호출되었는지 여부."""
+        """Whether the Mock was called at least once."""
         return cast("bool", self._mock.called)
 
     @property
     def call_args(self) -> Any:
-        """마지막 호출의 인자."""
+        """Arguments of the last call."""
         return cast("Any", self._mock.call_args)
 
     @property
     def call_args_list(self) -> list[Any]:
-        """모든 호출의 인자 목록."""
+        """List of arguments for all calls."""
         return list(self._mock.call_args_list)
 
     @property
     def await_count(self) -> int:
-        """Mock이 await된 횟수."""
+        """Number of times the Mock was awaited."""
         return cast("int", self._mock.await_count)
 
     @property
     def await_args(self) -> Any:
-        """마지막 await의 인자."""
+        """Arguments of the last await."""
         return cast("Any", self._mock.await_args)
 
     @property
     def await_args_list(self) -> list[Any]:
-        """모든 await의 인자 목록."""
+        """List of arguments for all awaits."""
         result: list[Any] = list(self._mock.await_args_list)
         return result
 
@@ -594,11 +594,11 @@ class AsyncMockedMethod(Generic[P, R]):
     # =========================================================================
 
     def __getattr__(self, name: str) -> Any:
-        """정의되지 않은 속성은 내부 Mock으로 위임합니다."""
+        """Delegates undefined attributes to the internal Mock."""
         return getattr(self._mock, name)
 
     def __setattr__(self, name: str, value: Any) -> None:
-        """속성 설정을 내부 Mock으로 위임합니다."""
+        """Delegates attribute setting to the internal Mock."""
         if name == "_mock":
             object.__setattr__(self, name, value)
         else:

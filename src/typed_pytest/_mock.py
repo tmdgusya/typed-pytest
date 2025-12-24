@@ -1,7 +1,7 @@
 """
-TypedMock 제네릭 클래스.
+TypedMock generic class.
 
-원본 타입 T의 인터페이스를 유지하면서 Mock 기능을 제공하는 클래스입니다.
+Provides Mock functionality while preserving the interface of the original type T.
 """
 
 from __future__ import annotations
@@ -19,16 +19,16 @@ T = TypeVar("T")
 
 
 class TypedMock(MagicMock, Generic[T]):  # pyright: ignore[reportInconsistentConstructor]
-    """원본 타입 T의 인터페이스를 유지하면서 Mock 기능을 제공하는 클래스.
+    """Provides Mock functionality while preserving the interface of the original type T.
 
-    TypedMock은 MagicMock을 상속받아 모든 Mock 기능을 제공하면서,
-    제네릭 타입 파라미터 T를 통해 원본 클래스의 타입 정보를 유지합니다.
+    TypedMock inherits from MagicMock to provide all Mock functionality,
+    while maintaining the original class's type information through the generic type parameter T.
 
     Usage:
         >>> from typed_pytest import TypedMock
         >>> mock_service: TypedMock[UserService] = TypedMock(spec=UserService)
-        >>> mock_service.get_user(1)  # 원본 시그니처 자동완성
-        >>> mock_service.get_user.assert_called_once_with(1)  # Mock 메소드 타입 힌트
+        >>> mock_service.get_user(1)  # Original signature autocomplete
+        >>> mock_service.get_user.assert_called_once_with(1)  # Mock method type hints
 
     Example:
         >>> from unittest.mock import MagicMock
@@ -41,10 +41,10 @@ class TypedMock(MagicMock, Generic[T]):  # pyright: ignore[reportInconsistentCon
         >>> mock.get_user.assert_called_once_with(1)
 
     Note:
-        일반적으로 `typed_mock()` 팩토리 함수를 사용하는 것이 더 편리합니다.
+        Using the `typed_mock()` factory function is typically more convenient.
     """
 
-    # _typed_class를 인스턴스 변수로 선언 (MagicMock과 충돌 방지)
+    # Declaring _typed_class as instance variable (conflict prevention with MagicMock)
     __slots__ = ()
 
     def __init__(
@@ -56,16 +56,16 @@ class TypedMock(MagicMock, Generic[T]):  # pyright: ignore[reportInconsistentCon
         spec_set: type[T] | None = None,
         **kwargs: Any,
     ) -> None:
-        """TypedMock 인스턴스를 생성합니다.
+        """Creates a TypedMock instance.
 
         Args:
-            spec: Mock의 스펙으로 사용할 클래스. 이 클래스의 속성만 접근 가능.
-            wraps: 실제 객체를 래핑할 경우 해당 객체.
-            name: Mock의 이름 (디버깅용).
-            spec_set: spec과 동일하나 속성 설정도 제한.
-            **kwargs: MagicMock에 전달할 추가 인자.
+            spec: Class to use as the Mock's spec. Only this class's attributes are accessible.
+            wraps: Object to wrap if wrapping a real object.
+            name: Name of the Mock (for debugging).
+            spec_set: Same as spec, but also restricts attribute setting.
+            **kwargs: Additional arguments to pass to MagicMock.
         """
-        # spec 또는 spec_set 결정
+        # Determine spec or spec_set
         actual_spec = spec_set or spec
         if spec_set is not None:
             kwargs["spec_set"] = spec_set
@@ -79,19 +79,19 @@ class TypedMock(MagicMock, Generic[T]):  # pyright: ignore[reportInconsistentCon
 
         super().__init__(**kwargs)
 
-        # 타입 정보 저장 (MagicMock의 __setattr__를 우회)
+        # Store type information (bypass MagicMock's __setattr__)
         object.__setattr__(self, "_typed_class", actual_spec)
 
     if TYPE_CHECKING:
-        # 타입 체커에게만 보이는 정의
+        # Only visible to type checkers
         def __getattr__(
             self, name: str
         ) -> MockedMethod[..., Any] | AsyncMockedMethod[..., Any]:
-            """타입 체커에게 MockedMethod 또는 AsyncMockedMethod 반환을 알림."""
+            """Informs the type checker to return MockedMethod or AsyncMockedMethod."""
             ...
 
     def _get_child_mock(self, **kwargs: Any) -> MagicMock:
-        """자식 Mock 생성 시 async 메소드는 AsyncMock을 반환."""
+        """Returns AsyncMock for async methods when creating child Mocks."""
         name = kwargs.get("name")
         if name and self.typed_class is not None:
             for cls in self.typed_class.__mro__:
@@ -104,12 +104,12 @@ class TypedMock(MagicMock, Generic[T]):  # pyright: ignore[reportInconsistentCon
 
     @property
     def typed_class(self) -> type[T] | None:
-        """제네릭 파라미터로 전달된 원본 클래스."""
+        """The original class passed as the generic parameter."""
         result: type[T] | None = object.__getattribute__(self, "_typed_class")
         return result
 
     def __repr__(self) -> str:
-        """TypedMock의 문자열 표현."""
+        """String representation of TypedMock."""
         typed_class = object.__getattribute__(self, "_typed_class")
         name = self._mock_name
 

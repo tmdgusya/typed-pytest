@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 # ============================================================================
-# 시나리오 1: 서비스-리포지토리 패턴
+# Scenario 1: Service-Repository Pattern
 # ============================================================================
 
 
@@ -53,15 +53,15 @@ class OrderService:
 
 
 class TestServiceRepositoryPattern:
-    """서비스-리포지토리 패턴 테스트.
+    """Service-Repository pattern tests.
 
     Example:
-        이 패턴은 서비스 레이어가 리포지토리(데이터 접근 레이어)에
-        의존하는 일반적인 아키텍처에서 사용됩니다.
+        This pattern is used in typical architectures where the service layer
+        depends on the repository (data access layer) layer.
     """
 
     def test_service_with_mocked_dependencies(self, typed_mocker: TypedMocker) -> None:
-        """서비스의 의존성을 mock으로 대체하는 테스트."""
+        """Test replacing service dependencies with mocks."""
         # Arrange
         mock_user_service = typed_mocker.mock(UserService)
         mock_product_repo = typed_mocker.mock(ProductRepository)
@@ -84,7 +84,7 @@ class TestServiceRepositoryPattern:
         mock_product_repo.find_by_id.assert_called_once_with("P001")
 
     def test_service_handles_user_not_found(self, typed_mocker: TypedMocker) -> None:
-        """사용자를 찾을 수 없는 경우 테스트."""
+        """Test when user is not found."""
         mock_user_service = typed_mocker.mock(UserService)
         mock_product_repo = typed_mocker.mock(ProductRepository)
 
@@ -97,7 +97,7 @@ class TestServiceRepositoryPattern:
 
 
 # ============================================================================
-# 시나리오 2: 외부 API 클라이언트 Mock
+# Scenario 2: External API Client Mock
 # ============================================================================
 
 
@@ -130,16 +130,16 @@ class WeatherService:
 
 
 class TestExternalApiMock:
-    """외부 API 클라이언트 mock 테스트.
+    """External API client mock tests.
 
     Example:
-        외부 API 호출을 mock하여 네트워크 의존성 없이 테스트합니다.
+        Mock external API calls to test without network dependencies.
     """
 
     def test_weather_service_with_mocked_client(
         self, typed_mocker: TypedMocker
     ) -> None:
-        """HTTP 클라이언트를 mock하여 날씨 서비스 테스트."""
+        """Test weather service with mocked HTTP client."""
         mock_client = typed_mocker.mock(HttpClient)
         mock_client.get.return_value = {
             "temp": 25,
@@ -155,7 +155,7 @@ class TestExternalApiMock:
         mock_client.get.assert_called_once_with("https://api.weather.com/Seoul")
 
     def test_api_error_handling(self, typed_mocker: TypedMocker) -> None:
-        """API 에러 상황 테스트."""
+        """Test API error handling."""
         mock_client = typed_mocker.mock(HttpClient)
         mock_client.get.side_effect = ConnectionError("Network error")
 
@@ -166,7 +166,7 @@ class TestExternalApiMock:
 
 
 # ============================================================================
-# 시나리오 3: side_effect 활용
+# Scenario 3: side_effect Usage
 # ============================================================================
 
 
@@ -223,23 +223,23 @@ class TestSideEffectUsage:
 
 
 # ============================================================================
-# 시나리오 4: 여러 mock 조합
+# Scenario 4: Multiple Mock Combinations
 # ============================================================================
 
 
 class TestMultipleMocksCombination:
-    """여러 mock을 조합하여 사용하는 테스트."""
+    """Tests using multiple mocks together."""
 
     def test_complex_scenario_with_multiple_mocks(
         self, typed_mocker: TypedMocker
     ) -> None:
-        """복잡한 시나리오에서 여러 mock 사용."""
-        # 여러 서비스 mock 생성
+        """Using multiple mocks in a complex scenario."""
+        # Create multiple service mocks
         mock_user_service = typed_mocker.mock(UserService)
         mock_product_repo = typed_mocker.mock(ProductRepository)
         mock_http_client = typed_mocker.mock(HttpClient)
 
-        # 각 mock 설정
+        # Configure each mock
         mock_user_service.get_user.return_value = {"id": 1, "name": "Test"}
         mock_product_repo.find_all.return_value = [
             {"id": "P001", "name": "Product 1"},
@@ -247,7 +247,7 @@ class TestMultipleMocksCombination:
         ]
         mock_http_client.post.return_value = {"status": "success"}
 
-        # 검증
+        # Verify
         user = mock_user_service.get_user(1)
         products = mock_product_repo.find_all()
         response = mock_http_client.post("/api/order", {"user_id": 1})
@@ -256,61 +256,61 @@ class TestMultipleMocksCombination:
         assert len(products) == 2
         assert response["status"] == "success"
 
-        # 모든 호출 검증
+        # Verify all calls
         mock_user_service.get_user.assert_called_once()
         mock_product_repo.find_all.assert_called_once()
         mock_http_client.post.assert_called_once()
 
 
 # ============================================================================
-# 시나리오 5: spy 활용
+# Scenario 5: Spy Usage
 # ============================================================================
 
 
 class TestSpyUsage:
-    """spy를 활용한 테스트 패턴."""
+    """Spy usage patterns."""
 
     def test_spy_tracks_real_method_calls(self, typed_mocker: TypedMocker) -> None:
-        """spy가 실제 메소드 호출을 추적하는지 테스트."""
+        """Test spy tracks real method calls."""
         service = UserService()
 
         spy = typed_mocker.spy(service, "validate_email")
 
-        # 실제 메소드 호출 (원본 동작 유지)
+        # Call real method (original behavior preserved)
         result1 = service.validate_email("test@example.com")
         result2 = service.validate_email("invalid-email")
 
-        # 원본 동작 확인
+        # Verify original behavior
         assert result1 is True
         assert result2 is False
 
-        # 호출 추적 확인
+        # Verify call tracking
         assert spy.call_count == 2
         spy.assert_any_call("test@example.com")
         spy.assert_any_call("invalid-email")
 
     def test_spy_on_internal_method(self, typed_mocker: TypedMocker) -> None:
-        """내부 메소드 호출 확인을 위한 spy 사용."""
+        """Test spy for internal method call verification."""
         service = UserService()
         spy = typed_mocker.spy(service, "validate_email")
 
-        # create_user 내부에서 validate_email이 호출되는지 확인할 수 있음
-        # (실제로 호출되는지는 UserService 구현에 따름)
+        # Can verify if validate_email was called inside create_user
+        # (Whether it's actually called depends on UserService implementation)
         service.validate_email("user@test.com")
 
         spy.assert_called_once_with("user@test.com")
 
 
 # ============================================================================
-# 시나리오 6: patch와 함께 사용
+# Scenario 6: Using with patch
 # ============================================================================
 
 
 class TestPatchIntegration:
-    """patch를 활용한 통합 테스트 패턴."""
+    """Integration tests using patch."""
 
     def test_patch_module_level_class(self, typed_mocker: TypedMocker) -> None:
-        """모듈 레벨 클래스를 patch하는 테스트."""
+        """Test patching module-level class."""
         mock = typed_mocker.patch(
             "tests.fixtures.sample_classes.UserService",
             new=UserService,
@@ -319,79 +319,79 @@ class TestPatchIntegration:
 
         from tests.fixtures import sample_classes  # noqa: PLC0415
 
-        # 패치된 클래스 사용
+        # Use patched class
         result = sample_classes.UserService.get_user(1)
         assert result["name"] == "Patched User"
 
     def test_patch_object_for_single_method(self, typed_mocker: TypedMocker) -> None:
-        """단일 메소드만 patch하는 테스트."""
+        """Test patching single method only."""
         import os  # noqa: PLC0415
 
         mock = typed_mocker.patch_object(os.path, "exists")
         mock.return_value = True
 
-        # 패치된 함수 사용
+        # Use patched function
         assert os.path.exists("/nonexistent/path") is True  # noqa: PTH110
         mock.assert_called_once_with("/nonexistent/path")
 
 
 # ============================================================================
-# 시나리오 7: 타입 안전성 검증
+# Scenario 7: Type Safety Verification
 # ============================================================================
 
 
 class TestTypeSafety:
-    """타입 안전성 관련 테스트."""
+    """Type safety tests."""
 
     def test_typed_mock_preserves_type_info(self, typed_mocker: TypedMocker) -> None:
-        """TypedMock이 타입 정보를 보존하는지 테스트."""
+        """Test TypedMock preserves type info."""
         mock = typed_mocker.mock(UserService)
 
         assert isinstance(mock, TypedMock)
         assert mock.typed_class is UserService
 
     def test_mock_has_original_methods(self, typed_mocker: TypedMocker) -> None:
-        """mock이 원본 클래스의 메소드를 가지는지 테스트."""
+        """Test mock has original class methods."""
         mock = typed_mocker.mock(UserService)
 
-        # 원본 클래스의 메소드들이 존재해야 함
+        # Original class methods should exist
         assert hasattr(mock, "get_user")
         assert hasattr(mock, "create_user")
         assert hasattr(mock, "delete_user")
         assert hasattr(mock, "validate_email")
 
     def test_spec_set_prevents_typos(self, typed_mocker: TypedMocker) -> None:
-        """spec_set이 오타를 방지하는지 테스트."""
+        """Test spec_set prevents typos."""
         mock = typed_mocker.mock(UserService, spec_set=True)
 
-        # 존재하지 않는 메소드 접근 시 에러
+        # Accessing non-existent method should error
         with pytest.raises(AttributeError):
             _ = mock.nonexistent_method
 
 
 # ============================================================================
-# 시나리오 8: assertion 메소드 활용
+# Scenario 8: Assertion Methods Usage
 # ============================================================================
 
 
 class TestAssertionMethods:
-    """다양한 assertion 메소드 활용 테스트."""
+    """Various assertion method usage tests."""
 
     def test_assert_called_variations(self, typed_mocker: TypedMocker) -> None:
-        """다양한 assert_called 변형 테스트."""
+        """Test various assert_called variations."""
         mock = typed_mocker.mock(UserService)
 
-        # 호출 전
+        # Before call
         mock.get_user.assert_not_called()
 
-        # 첫 번째 호출
+        # First call
         mock.get_user(1)
         mock.get_user.assert_called()
         mock.get_user.assert_called_once()
         mock.get_user.assert_called_with(1)
         mock.get_user.assert_called_once_with(1)
 
-        # 두 번째 호출
+        # Second call
         mock.get_user(2)
         mock.get_user.assert_called()
         assert mock.get_user.call_count == 2
@@ -399,18 +399,18 @@ class TestAssertionMethods:
         mock.get_user.assert_any_call(2)
 
     def test_call_args_inspection(self, typed_mocker: TypedMocker) -> None:
-        """call_args를 통한 호출 인자 검사."""
+        """Inspect call arguments via call_args."""
         mock = typed_mocker.mock(UserService)
 
         mock.create_user("John", "john@example.com")
 
-        # 마지막 호출의 인자 확인
+        # Verify last call arguments
         assert mock.create_user.call_args is not None
         args, _kwargs = mock.create_user.call_args
         assert args == ("John", "john@example.com")
 
     def test_call_args_list_inspection(self, typed_mocker: TypedMocker) -> None:
-        """call_args_list를 통한 모든 호출 검사."""
+        """Inspect all calls via call_args_list."""
         mock = typed_mocker.mock(UserService)
 
         mock.get_user(1)

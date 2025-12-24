@@ -190,9 +190,9 @@ class TestTypedMockerFixtureCleanup:
         assert sample_classes.UserService.get_user(1) == {"id": 111}
 
     def test_patch_cleanup_between_tests_part2(self, typed_mocker: TypedMocker) -> None:
-        """패치가 테스트 간에 정리되는지 확인 (Part 2).
+        """Verify patches are cleaned up between tests (Part 2).
 
-        Part 1에서 설정한 패치가 이 테스트에 영향을 주지 않아야 함.
+        Patch set in Part 1 should not affect this test.
         """
         mock = typed_mocker.patch(
             "tests.fixtures.sample_classes.UserService",
@@ -202,5 +202,5 @@ class TestTypedMockerFixtureCleanup:
 
         from tests.fixtures import sample_classes  # noqa: PLC0415
 
-        # Part 1의 값(111)이 아닌 이 테스트의 값(222)이어야 함
+        # Should be this test's value (222), not Part 1's value (111)
         assert sample_classes.UserService.get_user(1) == {"id": 222}

@@ -116,17 +116,17 @@ class TestTypedMockerPatch:
         assert mock.typed_class is UserService
 
     def test_patch_without_type_returns_magicmock(self, mocker: MockerFixture) -> None:
-        """new 미지정 시 MagicMock을 반환하는지 확인."""
+        """Verify MagicMock is returned when new is not specified."""
         typed_mocker = TypedMocker(mocker)
 
         mock = typed_mocker.patch("tests.fixtures.sample_classes.UserService")
 
-        # MagicMock이지만 TypedMock은 아님
+        # It's a MagicMock but not a TypedMock
         assert hasattr(mock, "return_value")
         assert not isinstance(mock, TypedMock)
 
     def test_patch_replaces_target(self, mocker: MockerFixture) -> None:
-        """patch가 실제로 대상을 교체하는지 확인."""
+        """Verify patch actually replaces target."""
         typed_mocker = TypedMocker(mocker)
         mock = typed_mocker.patch(
             "tests.fixtures.sample_classes.UserService",
@@ -134,19 +134,19 @@ class TestTypedMockerPatch:
         )
         mock.get_user.return_value = {"id": 999}
 
-        # 패치된 모듈에서 UserService 가져오기
+        # Get UserService from patched module
         from tests.fixtures import sample_classes  # noqa: PLC0415
 
-        # 패치된 클래스가 mock인지 확인
+        # Verify patched class is a mock
         result = sample_classes.UserService.get_user(1)
         assert result == {"id": 999}
 
 
 class TestTypedMockerSpy:
-    """TypedMocker.spy() 메소드 테스트."""
+    """TypedMocker.spy() method tests."""
 
     def test_spy_returns_mocked_method(self, mocker: MockerFixture) -> None:
-        """spy()가 MockedMethod를 반환하는지 확인."""
+        """Verify spy() returns MockedMethod."""
         typed_mocker = TypedMocker(mocker)
         service = UserService()
 
@@ -155,19 +155,19 @@ class TestTypedMockerSpy:
         assert isinstance(spy, MockedMethod)
 
     def test_spy_tracks_calls(self, mocker: MockerFixture) -> None:
-        """spy가 호출을 추적하는지 확인."""
+        """Verify spy tracks calls."""
         typed_mocker = TypedMocker(mocker)
         service = UserService()
 
         spy = typed_mocker.spy(service, "validate_email")
 
-        # 실제 메소드 호출
+        # Call real method
         result = service.validate_email("test@example.com")
 
-        # 원본 동작 확인
+        # Verify original behavior
         assert result is True
 
-        # 호출 추적 확인
+        # Verify call tracking
         spy.assert_called_once_with("test@example.com")
 
     def test_spy_has_mock_attributes(self, mocker: MockerFixture) -> None:
@@ -221,28 +221,28 @@ class TestTypedMockerRealScenarios:
         assert mock_repo.find_all() == []
 
     def test_access_original_mocker_stub(self, mocker: MockerFixture) -> None:
-        """원본 mocker의 stub() 기능 접근 테스트."""
+        """Test accessing original mocker's stub() function."""
         typed_mocker = TypedMocker(mocker)
 
-        # 원본 mocker의 기능 사용
+        # Use original mocker's functionality
         stub = typed_mocker.mocker.stub(name="test_stub")
         stub.return_value = "stubbed"
 
         assert stub() == "stubbed"
 
     def test_access_original_mocker_resetall(self, mocker: MockerFixture) -> None:
-        """원본 mocker의 resetall() 기능 접근 테스트."""
+        """Test accessing original mocker's resetall() function."""
         typed_mocker = TypedMocker(mocker)
 
-        # mocker.patch()로 생성된 mock은 resetall()로 리셋됨
+        # Mocks created with mocker.patch() are reset with resetall()
         mock = typed_mocker.mocker.patch("tests.fixtures.sample_classes.UserService")
         mock.get_user(1)
         assert mock.get_user.call_count == 1
 
-        # 원본 mocker의 resetall 사용
+        # Use original mocker's resetall
         typed_mocker.mocker.resetall()
 
-        # 리셋 후 호출 횟수 확인
+        # Verify call count after reset
         assert mock.get_user.call_count == 0
 
     def test_side_effect_sequence(self, mocker: MockerFixture) -> None:

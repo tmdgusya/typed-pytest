@@ -47,10 +47,10 @@ class TestUserService:
         assert service is not None
 
     def test_service_with_repository(self) -> None:
-        """리포지토리와 함께 서비스 생성."""
+        """Create service with repository."""
         repo = UserRepository()
         service = UserService(repository=repo)
-        # 내부 속성 확인 (테스트 목적)
+        # Verify internal attribute (for testing purposes)
         assert service._repository is repo  # noqa: SLF001
 
     def test_connection_status_property(self) -> None:

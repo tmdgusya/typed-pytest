@@ -50,15 +50,15 @@ class TestPatchObject:
         mock.assert_called_once_with(1)
 
     def test_patch_object_restores_after_test(self, typed_mocker: TypedMocker) -> None:
-        """patch가 테스트 후 복원되는지 확인."""
+        """Verify patch is restored after test."""
         original_getcwd = os.getcwd
         mock = typed_mocker.patch_object(os, "getcwd")
         mock.return_value = "/fake"
 
-        # 테스트 내에서는 mock
+        # Inside test, it's mocked
         assert os.getcwd() == "/fake"  # noqa: PTH109
-        # 테스트 종료 후에는 pytest-mock이 자동 복원
-        # (이 테스트에서는 아직 테스트 중이므로 mock 상태)
+        # After test ends, pytest-mock automatically restores
+        # (This test is still running, so still mocked)
         assert os.getcwd != original_getcwd
 
 
@@ -86,14 +86,14 @@ class TestPatchDict:
         assert "existing" not in test_dict
 
     def test_patch_dict_preserves_original(self, typed_mocker: TypedMocker) -> None:
-        """원본 딕셔너리가 테스트 후 복원되는지 확인."""
+        """Verify original dictionary is restored after test."""
         test_dict = {"original": "value"}
         original_copy = test_dict.copy()
 
         typed_mocker.patch_dict(test_dict, {"added": "item"})
 
         assert "added" in test_dict
-        # 테스트 내에서는 수정됨
+        # Inside test, it's modified
         assert test_dict != original_copy
 
     def test_patch_dict_string_target(self, typed_mocker: TypedMocker) -> None:
@@ -153,10 +153,10 @@ class TestPatchAutospec:
     """autospec 옵션 테스트."""
 
     def test_patch_object_with_autospec(self, typed_mocker: TypedMocker) -> None:
-        """autospec 옵션으로 시그니처 보존 테스트."""
+        """Test autospec option for signature preservation."""
         mock = typed_mocker.patch_object(os.path, "join", autospec=True)
 
-        # autospec이면 시그니처가 보존됨
+        # With autospec, signature is preserved
         os.path.join("a", "b", "c")  # noqa: PTH118
         mock.assert_called_once_with("a", "b", "c")
 
@@ -182,8 +182,8 @@ class TestPatchCleanupOrder:
         assert os.environ["CLEANUP_TEST"] == "part1"
 
     def test_cleanup_order_part2(self, typed_mocker: TypedMocker) -> None:
-        """Part 2: Part 1의 patch가 정리되었는지 확인."""
-        # Part 1에서 설정한 값이 없어야 함
+        """Part 2: Verify Part 1's patch is cleaned up."""
+        # Value from Part 1 should not exist
         assert os.environ.get("CLEANUP_TEST") is None
 
         typed_mocker.patch_dict(os.environ, {"CLEANUP_TEST": "part2"})

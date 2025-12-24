@@ -25,40 +25,40 @@ class TestTypedMockCreation:
         assert hasattr(mock, "create_user")
 
     def test_creation_with_spec_set(self) -> None:
-        """spec_set으로 TypedMock 생성."""
+        """Create TypedMock with spec_set."""
         mock = TypedMock(spec_set=UserService)
         assert hasattr(mock, "get_user")
 
-        # spec_set은 없는 속성 설정을 막음
+        # spec_set prevents setting non-existent attributes
         with pytest.raises(AttributeError):
             mock.nonexistent_method = "value"  # type: ignore[attr-defined]
 
     def test_creation_with_name(self) -> None:
-        """name으로 TypedMock 생성."""
+        """Create TypedMock with name."""
         mock = TypedMock(spec=UserService, name="test_mock")
         assert "test_mock" in str(mock)
 
     def test_typed_class_stored(self) -> None:
-        """typed_class가 저장되는지 확인."""
+        """Verify typed_class is stored."""
         mock = TypedMock(spec=UserService)
         assert mock.typed_class is UserService
 
     def test_typed_class_none_without_spec(self) -> None:
-        """spec 없이 생성 시 typed_class가 None인지 확인."""
+        """Verify typed_class is None when created without spec."""
         mock: TypedMock[UserService] = TypedMock()
         assert mock.typed_class is None
 
 
 class TestTypedMockGenericSyntax:
-    """TypedMock 제네릭 문법 테스트."""
+    """TypedMock generic syntax tests."""
 
     def test_class_getitem(self) -> None:
-        """__class_getitem__이 동작하는지 확인."""
+        """Verify __class_getitem__ works."""
         MockType = TypedMock[UserService]
         assert MockType is not None
 
     def test_generic_type_annotation(self) -> None:
-        """제네릭 타입 어노테이션이 동작하는지 확인."""
+        """Verify generic type annotation works."""
         mock: TypedMock[UserService] = TypedMock(spec=UserService)
         assert isinstance(mock, TypedMock)
 
@@ -135,18 +135,18 @@ class TestTypedMockProperties:
         assert mock.get_user.called is True
 
     def test_call_args(self) -> None:
-        """call_args가 동작하는지 확인."""
+        """Verify call_args works."""
         mock: TypedMock[UserService] = TypedMock(spec=UserService)
 
         mock.get_user(1)
         mock.get_user(2, extra="value")
 
-        # 마지막 호출 인자 확인
+        # Verify last call arguments
         assert mock.get_user.call_args[0] == (2,)
         assert mock.get_user.call_args[1] == {"extra": "value"}
 
     def test_call_args_list(self) -> None:
-        """call_args_list가 동작하는지 확인."""
+        """Verify call_args_list works."""
         mock: TypedMock[UserService] = TypedMock(spec=UserService)
 
         mock.get_user(1)
@@ -157,10 +157,10 @@ class TestTypedMockProperties:
 
 
 class TestTypedMockRepr:
-    """TypedMock repr 테스트."""
+    """TypedMock repr tests."""
 
     def test_repr_with_spec(self) -> None:
-        """spec이 있을 때 repr 확인."""
+        """Verify repr when spec is present."""
         mock = TypedMock(spec=UserService)
         repr_str = repr(mock)
 
@@ -168,7 +168,7 @@ class TestTypedMockRepr:
         assert "UserService" in repr_str
 
     def test_repr_without_spec(self) -> None:
-        """spec이 없을 때 repr 확인."""
+        """Verify repr when spec is absent."""
         mock: TypedMock[UserService] = TypedMock()
         repr_str = repr(mock)
 
@@ -176,14 +176,14 @@ class TestTypedMockRepr:
 
 
 class TestTypedMockChildMock:
-    """TypedMock 자식 Mock 테스트."""
+    """TypedMock child Mock tests."""
 
     def test_child_mock_is_magicmock(self) -> None:
-        """자식 Mock이 MagicMock인지 확인."""
+        """Verify child mock is MagicMock."""
         mock: TypedMock[UserService] = TypedMock(spec=UserService)
         child = mock.get_user
 
-        # 자식은 MagicMock이지만 TypedMock이 아님
+        # Child is MagicMock but not TypedMock
         assert isinstance(child, MagicMock)
 
 

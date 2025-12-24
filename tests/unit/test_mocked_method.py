@@ -218,11 +218,11 @@ class TestMockedMethod:
         assert method.call_args_list == [call(1), call(2)]
 
     def test_attribute_delegation(self) -> None:
-        """속성 위임이 정상 동작하는지."""
+        """Verify attribute delegation works."""
         mock = MagicMock()
         method: MockedMethod[[int], dict] = MockedMethod(mock)
 
-        # mock_calls는 MagicMock의 속성
+        # mock_calls is a MagicMock attribute
         assert hasattr(method, "mock_calls")
         assert method.mock_calls == []
 

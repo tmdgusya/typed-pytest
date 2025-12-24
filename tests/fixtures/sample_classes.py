@@ -1,9 +1,7 @@
-"""
-테스트용 샘플 클래스 정의.
+"""Sample classes for testing.
 
-이 클래스들은 typed-pytest의 기능을 테스트하기 위한 대상입니다.
-다양한 메소드 시그니처와 타입을 포함합니다.
-"""
+These classes are used to test typed-pytest functionality.
+They include various method signatures and types."""
 
 from dataclasses import dataclass
 from typing import Any
@@ -16,7 +14,7 @@ from typing import Any
 
 @dataclass
 class User:
-    """사용자 엔티티."""
+    """User entity."""
 
     id: int
     name: str
@@ -25,7 +23,7 @@ class User:
 
 @dataclass
 class Product:
-    """상품 엔티티."""
+    """Product entity."""
 
     id: str
     name: str
@@ -38,38 +36,38 @@ class Product:
 
 
 class UserRepository:
-    """사용자 저장소."""
+    """User repository."""
 
     def find_by_id(self, user_id: int) -> User | None:
-        """ID로 사용자 조회."""
+        """Find user by ID."""
         raise NotImplementedError
 
     def find_all(self, limit: int = 10, offset: int = 0) -> list[User]:
-        """모든 사용자 조회."""
+        """Find all users."""
         raise NotImplementedError
 
     def save(self, user: User) -> User:
-        """사용자 저장."""
+        """Save user."""
         raise NotImplementedError
 
     def delete(self, user_id: int) -> bool:
-        """사용자 삭제."""
+        """Delete user."""
         raise NotImplementedError
 
 
 class ProductRepository:
-    """상품 저장소."""
+    """Product repository."""
 
     def find_by_id(self, product_id: str) -> Product | None:
-        """ID로 상품 조회."""
+        """Find product by ID."""
         raise NotImplementedError
 
     def find_all(self, limit: int = 10) -> list[Product]:
-        """모든 상품 조회."""
+        """Find all products."""
         raise NotImplementedError
 
     def search(self, query: str, *, max_results: int = 100) -> list[Product]:
-        """상품 검색 (키워드 전용 인자 포함)."""
+        """Search products (with keyword-only arguments)."""
         raise NotImplementedError
 
 
@@ -79,19 +77,19 @@ class ProductRepository:
 
 
 class UserService:
-    """사용자 서비스 - 다양한 메소드 시그니처 테스트용."""
+    """User service - for testing various method signatures."""
 
     def __init__(self, repository: UserRepository | None = None) -> None:
-        """생성자."""
+        """Constructor."""
         self._repository = repository
 
-    # 기본 메소드
+    # Basic methods
     def get_user(self, user_id: int) -> dict[str, Any]:
-        """사용자 조회 - 기본 시그니처."""
+        """Get user - basic signature."""
         raise NotImplementedError
 
     def create_user(self, name: str, email: str) -> dict[str, Any]:
-        """사용자 생성 - 다중 파라미터."""
+        """Create user - multiple parameters."""
         raise NotImplementedError
 
     def update_user(
@@ -101,43 +99,43 @@ class UserService:
         name: str | None = None,
         email: str | None = None,
     ) -> dict[str, Any]:
-        """사용자 수정 - 키워드 전용 인자."""
+        """Update user - keyword-only arguments."""
         raise NotImplementedError
 
     def delete_user(self, user_id: int) -> bool:
-        """사용자 삭제 - bool 반환."""
+        """Delete user - returns bool."""
         raise NotImplementedError
 
-    # 비동기 메소드
+    # Async methods
     async def async_get_user(self, user_id: int) -> dict[str, Any]:
-        """비동기 사용자 조회."""
+        """Async get user."""
         raise NotImplementedError
 
     async def async_create_user(self, name: str, email: str) -> dict[str, Any]:
-        """비동기 사용자 생성."""
+        """Async create user."""
         raise NotImplementedError
 
-    # 프로퍼티
+    # Properties
     @property
     def connection_status(self) -> str:
-        """연결 상태 프로퍼티."""
+        """Connection status property."""
         return "connected"
 
     @property
     def is_connected(self) -> bool:
-        """연결 여부."""
+        """Connection status."""
         return True
 
-    # 클래스 메소드
+    # Class methods
     @classmethod
     def from_config(cls, config: dict[str, Any]) -> "UserService":
-        """설정에서 서비스 생성."""
+        """Create service from config."""
         return cls()
 
-    # 스태틱 메소드
+    # Static methods
     @staticmethod
     def validate_email(email: str) -> bool:
-        """이메일 유효성 검사."""
+        """Validate email."""
         return "@" in email
 
 
@@ -147,29 +145,29 @@ class UserService:
 
 
 class GenericService[T]:
-    """제네릭 서비스 - 제네릭 타입 테스트용."""
+    """Generic service - for testing generic types."""
 
     def get(self, id: int) -> T | None:
-        """제네릭 조회."""
+        """Generic get."""
         raise NotImplementedError
 
     def get_all(self) -> list[T]:
-        """제네릭 전체 조회."""
+        """Generic get all."""
         raise NotImplementedError
 
     def save(self, item: T) -> T:
-        """제네릭 저장."""
+        """Generic save."""
         raise NotImplementedError
 
 
 class NestedService:
-    """중첩 서비스 - 중첩 mock 테스트용."""
+    """Nested service - for testing nested mocks."""
 
     def __init__(self) -> None:
-        """생성자."""
+        """Constructor."""
         self.user_service = UserService()
         self.product_repo = ProductRepository()
 
     def get_user_products(self, user_id: int) -> list[Product]:
-        """사용자의 상품 조회."""
+        """Get user's products."""
         raise NotImplementedError
