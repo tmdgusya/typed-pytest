@@ -1065,9 +1065,9 @@ class TestNestedMock:
 | T104 | Claude | DONE | 공개 API 정의 완료 |
 | T105 | Claude | DONE | 기본 타입 체커 호환성 검증 완료 |
 | T200 | Claude | DONE | TypedMocker 클래스 구현 완료 |
-| T201 | - | BACKLOG | |
-| T202 | - | BACKLOG | |
-| T203 | - | BACKLOG | |
+| T201 | Claude | DONE | typed_mocker fixture 구현 완료 |
+| T202 | Claude | DONE | patch_object, patch_dict 메소드 구현 완료 |
+| T203 | Claude | DONE | 실제 사용 시나리오 통합 테스트 완료 |
 | T300 | - | BACKLOG | |
 | T301 | - | BACKLOG | |
 | T302 | - | BACKLOG | |
