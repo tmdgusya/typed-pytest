@@ -220,6 +220,9 @@ ignore = [
     "ARG",    # unused arguments (fixtures)
     "PLR2004",# magic values in tests
 ]
+"conftest.py" = [
+    "PLC0415",  # conftest.py requires lazy imports for proper plugin loading
+]
 "__init__.py" = [
     "F401",   # unused imports (re-exports)
 ]

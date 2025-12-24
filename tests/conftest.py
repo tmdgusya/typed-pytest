@@ -14,6 +14,7 @@ import pytest
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
+    from tests.fixtures.sample_classes import UserService
     from typed_pytest._mocker import TypedMocker
 
 
@@ -25,7 +26,7 @@ if TYPE_CHECKING:
 @pytest.fixture
 def user_service_class() -> type[UserService]:
     """UserService 클래스 반환 (인스턴스가 아닌 클래스)."""
-    from tests.fixtures.sample_classes import UserService  # noqa: PLC0415
+    from tests.fixtures.sample_classes import UserService
 
     return UserService
 
@@ -53,6 +54,7 @@ def typed_mocker(mocker: MockerFixture) -> TypedMocker:
         ...     mock.get_user.return_value = {"id": 1}
         ...     assert mock.get_user(1) == {"id": 1}
     """
+    # Lazy import to avoid circular imports and ensure proper module loading
     from typed_pytest._mocker import TypedMocker
 
     return TypedMocker(mocker)

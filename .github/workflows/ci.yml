@@ -77,6 +77,7 @@ jobs:
         run: |
           uv run pytest tests/ \
             --cov \
+            --cov-fail-under=80 \
             --cov-report=term-missing \
             --cov-report=xml
 
