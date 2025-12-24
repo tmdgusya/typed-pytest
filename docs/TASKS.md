@@ -1064,7 +1064,7 @@ class TestNestedMock:
 | T103 | Claude | DONE | typed_mock 팩토리 함수 완료 |
 | T104 | Claude | DONE | 공개 API 정의 완료 |
 | T105 | Claude | DONE | 기본 타입 체커 호환성 검증 완료 |
-| T200 | - | BACKLOG | |
+| T200 | Claude | DONE | TypedMocker 클래스 구현 완료 |
 | T201 | - | BACKLOG | |
 | T202 | - | BACKLOG | |
 | T203 | - | BACKLOG | |

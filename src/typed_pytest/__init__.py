@@ -15,6 +15,7 @@ Usage:
 from typed_pytest._factory import typed_mock
 from typed_pytest._method import AsyncMockedMethod, MockedMethod
 from typed_pytest._mock import TypedMock
+from typed_pytest._mocker import TypedMocker
 from typed_pytest._protocols import AsyncMockProtocol, MockProtocol
 from typed_pytest._version import __version__
 
@@ -25,6 +26,7 @@ __all__ = [
     "MockProtocol",
     "MockedMethod",
     "TypedMock",
+    "TypedMocker",
     "__version__",
     "typed_mock",
 ]
