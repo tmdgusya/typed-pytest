@@ -3,8 +3,7 @@
 import pytest
 
 from tests.fixtures.sample_classes import ProductRepository, UserService
-from typed_pytest._factory import typed_mock
-from typed_pytest._mock import TypedMock
+from typed_pytest import TypedMock, typed_mock
 
 
 class TestTypedMockFactory:
