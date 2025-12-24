@@ -244,3 +244,124 @@ class TestTypedMockRealScenarios:
 
         assert mock.get_user.call_count == 0
         mock.get_user.assert_not_called()
+
+
+class TestTypedMockClassMethod:
+    """TypedMock class method tests."""
+
+    def test_has_classmethod(self) -> None:
+        """Verify classmethod is accessible."""
+        mock = TypedMock(spec=UserService)
+
+        assert hasattr(mock, "from_config")
+
+    def test_classmethod_call_works(self) -> None:
+        """Classmethod call works through TypedMock."""
+        mock = TypedMock(spec=UserService)
+        mock.from_config.return_value = mock
+
+        result = mock.from_config({"key": "value"})
+
+        assert result is mock
+        mock.from_config.assert_called_once_with({"key": "value"})
+
+    def test_classmethod_return_value(self) -> None:
+        """Classmethod return_value works."""
+        mock = TypedMock(spec=UserService)
+        mock.from_config.return_value = UserService()
+
+        result = mock.from_config({})
+
+        assert isinstance(result, UserService)
+
+    def test_classmethod_assertions(self) -> None:
+        """Classmethod assertion methods work."""
+        mock = TypedMock(spec=UserService)
+
+        mock.from_config({"test": True})
+
+        mock.from_config.assert_called()
+        mock.from_config.assert_called_once_with({"test": True})
+        assert mock.from_config.call_count == 1
+
+
+class TestTypedMockStaticMethod:
+    """TypedMock static method tests."""
+
+    def test_has_staticmethod(self) -> None:
+        """Verify staticmethod is accessible."""
+        mock = TypedMock(spec=UserService)
+
+        assert hasattr(mock, "validate_email")
+
+    def test_staticmethod_call_works(self) -> None:
+        """Staticmethod call works through TypedMock."""
+        mock = TypedMock(spec=UserService)
+        mock.validate_email.return_value = True
+
+        result = mock.validate_email("test@example.com")
+
+        assert result is True
+        mock.validate_email.assert_called_once_with("test@example.com")
+
+    def test_staticmethod_return_value(self) -> None:
+        """Staticmethod return_value works."""
+        mock = TypedMock(spec=UserService)
+        mock.validate_email.return_value = False
+
+        result = mock.validate_email("invalid")
+
+        assert result is False
+
+    def test_staticmethod_assertions(self) -> None:
+        """Staticmethod assertion methods work."""
+        mock = TypedMock(spec=UserService)
+
+        mock.validate_email("user@test.com")
+
+        mock.validate_email.assert_called()
+        mock.validate_email.assert_called_once_with("user@test.com")
+        assert mock.validate_email.call_count == 1
+
+
+class TestTypedMockProperty:
+    """TypedMock property tests."""
+
+    def test_has_property(self) -> None:
+        """Verify property is accessible."""
+        mock = TypedMock(spec=UserService)
+
+        assert hasattr(mock, "connection_status")
+        assert hasattr(mock, "is_connected")
+
+    def test_property_mock_access(self) -> None:
+        """Property access returns a mock."""
+        mock = TypedMock(spec=UserService)
+
+        result = mock.connection_status
+
+        # Property access returns a MagicMock
+        assert result is not None
+        assert hasattr(result, "return_value")
+
+    def test_property_with_side_effect(self) -> None:
+        """Property with side_effect works."""
+        mock = TypedMock(spec=UserService)
+        # Store the property mock to ensure we use the same instance
+        prop = mock.connection_status
+        prop.side_effect = ValueError("not connected")
+
+        with pytest.raises(ValueError, match="not connected"):
+            _ = prop()
+
+    def test_property_nested_mock(self) -> None:
+        """Property returns typed mock for nested access."""
+        mock = TypedMock(spec=UserService)
+
+        # Accessing a property returns a child mock
+        prop = mock.connection_status
+        prop.return_value = "custom_status"
+
+        # Re-accessing should return same mock (cached by MagicMock)
+        result = mock.connection_status
+        assert result.return_value == "custom_status"

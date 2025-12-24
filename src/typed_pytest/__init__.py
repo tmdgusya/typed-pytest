@@ -16,6 +16,7 @@ from typed_pytest._factory import typed_mock
 from typed_pytest._method import AsyncMockedMethod, MockedMethod
 from typed_pytest._mock import TypedMock
 from typed_pytest._mocker import TypedMocker
+from typed_pytest._property import MockedClassMethod, MockedProperty, MockedStaticMethod
 from typed_pytest._protocols import AsyncMockProtocol, MockProtocol
 from typed_pytest._version import __version__
 
@@ -24,7 +25,10 @@ __all__ = [
     "AsyncMockProtocol",
     "AsyncMockedMethod",
     "MockProtocol",
+    "MockedClassMethod",
     "MockedMethod",
+    "MockedProperty",
+    "MockedStaticMethod",
     "TypedMock",
     "TypedMocker",
     "__version__",

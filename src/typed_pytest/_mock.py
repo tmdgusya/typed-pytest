@@ -7,7 +7,7 @@ Provides Mock functionality while preserving the interface of the original type 
 from __future__ import annotations
 
 import inspect
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
 from unittest.mock import AsyncMock, MagicMock
 
 
@@ -16,6 +16,56 @@ if TYPE_CHECKING:
 
 
 T = TypeVar("T")
+
+
+def _get_method_type_info(spec_class: type, name: str) -> dict[str, Any]:  # pyright: ignore[reportUnusedFunction, reportUnknownArgumentType]
+    """Get method type information for type-safe mocking.
+
+    Inspects the class hierarchy to determine if an attribute is:
+    - async (coroutine function)
+    - property (property descriptor)
+    - classmethod (classmethod descriptor)
+    - staticmethod (staticmethod descriptor)
+    - method (regular instance method)
+
+    Args:
+        spec_class: The class to inspect.
+        name: The attribute name to check.
+
+    Returns:
+        Dictionary containing:
+        - type: 'async' | 'property' | 'classmethod' | 'staticmethod' | 'method'
+        - return_type: Return type annotation (if available)
+        - is_static: Whether it's a static method
+    """
+    for cls in spec_class.__mro__:
+        if name in cls.__dict__:
+            attr = cls.__dict__[name]
+            result: dict[str, Any] = {"type": "method", "is_static": False}
+
+            if isinstance(attr, staticmethod):
+                result["type"] = "staticmethod"
+                result["is_static"] = True
+                underlying: Any = attr.__func__
+                result["return_type"] = getattr(underlying, "__annotations__", {}).get(
+                    "return"
+                )
+            elif isinstance(attr, classmethod):
+                result["type"] = "classmethod"
+                # Access __func__ via object.__getattribute__ to avoid type checking issues
+                func_obj: Any = object.__getattribute__(cast("Any", attr), "__func__")
+                annotations = getattr(func_obj, "__annotations__", {})
+                result["return_type"] = annotations.get("return")
+            elif isinstance(attr, property):
+                result["type"] = "property"
+                result["return_type"] = attr.fget.__annotations__.get("return")
+            elif inspect.iscoroutinefunction(attr):
+                result["type"] = "async"
+                result["return_type"] = attr.__annotations__.get("return")
+
+            return result
+
+    return {"type": "method", "is_static": False, "return_type": None}
 
 
 class TypedMock(MagicMock, Generic[T]):  # pyright: ignore[reportInconsistentConstructor]
