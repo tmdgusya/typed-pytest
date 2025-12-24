@@ -177,13 +177,16 @@ class TestVersionInfo:
 class TestBackwardsCompatibility:
     """향후 호환성 테스트."""
 
-    def test_future_exports_commented(self) -> None:
-        """Phase 2 exports가 아직 추가되지 않았는지 확인."""
-        # Phase 2 기능은 아직 구현되지 않음
-        assert not hasattr(typed_pytest, "TypedMocker")
+    def test_phase2_exports_available(self) -> None:
+        """Phase 2 exports가 추가되었는지 확인 (T200 완료)."""
+        # T200: TypedMocker 클래스 구현 완료
+        assert hasattr(typed_pytest, "TypedMocker")
+        # typed_mocker fixture는 T201에서 구현 예정
         assert not hasattr(typed_pytest, "typed_mocker")
 
-    def test_phase2_not_in_all(self) -> None:
-        """Phase 2 exports가 __all__에 없는지 확인."""
-        assert "TypedMocker" not in typed_pytest.__all__
+    def test_phase2_in_all(self) -> None:
+        """Phase 2 exports가 __all__에 포함되었는지 확인."""
+        # T200: TypedMocker 클래스
+        assert "TypedMocker" in typed_pytest.__all__
+        # T201: typed_mocker fixture는 아직 미구현
         assert "typed_mocker" not in typed_pytest.__all__
