@@ -88,7 +88,7 @@ class TypedMocker:
         return typed_mock(cls, **kwargs)
 
     @overload
-    def patch(
+    def patch(  # pyright: ignore[reportOverlappingOverload]
         self,
         target: str,
         *,
@@ -97,7 +97,7 @@ class TypedMocker:
     ) -> TypedMock[T]: ...
 
     @overload
-    def patch(
+    def patch(  # pyright: ignore[reportOverlappingOverload]
         self,
         target: str,
         **kwargs: Any,
@@ -166,7 +166,7 @@ class TypedMocker:
         return MockedMethod(spy_mock)
 
     @overload
-    def patch_object(
+    def patch_object(  # pyright: ignore[reportOverlappingOverload]
         self,
         target: object,
         attribute: str,
@@ -176,7 +176,7 @@ class TypedMocker:
     ) -> TypedMock[T]: ...
 
     @overload
-    def patch_object(
+    def patch_object(  # pyright: ignore[reportOverlappingOverload]
         self,
         target: object,
         attribute: str,

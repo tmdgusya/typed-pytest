@@ -223,6 +223,10 @@ ignore = [
 "conftest.py" = [
     "PLC0415",  # conftest.py requires lazy imports for proper plugin loading
 ]
+"*.pyi" = [
+    "PYI",    # stub file rules have different conventions
+    "D",      # no docstrings in stubs
+]
 "__init__.py" = [
     "F401",   # unused imports (re-exports)
 ]
