@@ -9,7 +9,7 @@ import os
 from typing import TYPE_CHECKING
 
 from tests.fixtures.sample_classes import UserService
-from typed_pytest._mock import TypedMock
+from typed_pytest import TypedMock
 
 
 if TYPE_CHECKING:

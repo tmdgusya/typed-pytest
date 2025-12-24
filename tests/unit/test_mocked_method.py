@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, call
 
 import pytest
 
-from typed_pytest._method import AsyncMockedMethod, MockedMethod
+from typed_pytest import AsyncMockedMethod, MockedMethod
 
 
 class TestMockedMethod:
