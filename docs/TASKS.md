@@ -1070,7 +1070,7 @@ class TestNestedMock:
 | T203 | Claude | DONE | 실제 사용 시나리오 통합 테스트 완료 |
 | T300 | Claude | DONE | async 메소드 타입 테스트 추가 |
 | T301 | Claude | DONE | async 메소드 타입 테스트 추가 (T300과 동일) |
-| T302 | Claude | SKIP | 별도 스텁 불필요, inline 타입 애너테이션 충분 |
+| T302 | Claude | DONE | IDE 자동완성용 py.typed 스텁 파일 생성 |
 | T400 | - | BACKLOG | |
 | T401 | - | BACKLOG | |
 | T402 | - | BACKLOG | |
