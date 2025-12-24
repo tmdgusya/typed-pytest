@@ -25,17 +25,15 @@ service.get_user.assert_called_once()  # assert_called_once has no type hint!
 
 ## Solution
 
-`typed-pytest` provides type-safe mocking that preserves both:
-- Original class method signatures
-- Mock assertion method type hints
+`typed-pytest` provides type-safe mocking with:
+- **Type-checked mock assertions** - `assert_called_once_with()` and other assertions have full type hints
+- **Type-checked mock properties** - `return_value`, `side_effect`, `call_count` are properly typed
+- **IDE auto-completion** for mock methods
 
 ```python
 from typed_pytest import TypedMock, typed_mock
 
 mock_service: TypedMock[UserService] = typed_mock(UserService)
-
-# Original method signatures preserved
-mock_service.get_user(1)  # Autocomplete for parameters
 
 # Mock methods have type hints
 mock_service.get_user.assert_called_once_with(1)  # Type-checked!
