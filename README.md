@@ -1,6 +1,8 @@
 # typed-pytest
 
-Type-safe mocking for pytest - preserve original type hints while using mock features.
+**MagicMock kills your IDE autocomplete. We fix that.**
+
+Type-safe mocking for pytest with full IDE support - autocomplete for method names, parameters, and mock assertions.
 
 https://github.com/user-attachments/assets/f542f815-731b-4398-a8b6-fefadef19d7b
 
