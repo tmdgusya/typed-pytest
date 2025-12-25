@@ -27,6 +27,8 @@ class GenericService:
 
 class GenericService_TypedMock:
     @property
+    def typed_class(self) -> type[GenericService] | None: ...
+    @property
     def get(self) -> MockedMethod[[int], typing.Any]: ...
     @property
     def get_all(self) -> MockedMethod[[], typing.Any]: ...
@@ -41,6 +43,8 @@ class NestedService:
 
 class NestedService_TypedMock:
     @property
+    def typed_class(self) -> type[NestedService] | None: ...
+    @property
     def get_user_products(self) -> MockedMethod[[int], typing.Any]: ...
 
 class NestedServiceMock(NestedService_TypedMock):
@@ -50,7 +54,8 @@ class Product:
     pass
 
 class Product_TypedMock:
-    pass
+    @property
+    def typed_class(self) -> type[Product] | None: ...
 
 class ProductMock(Product_TypedMock):
     pass
@@ -61,6 +66,8 @@ class ProductRepository:
     def search(self, query: str, *, max_results: int = 100) -> typing.Any: ...
 
 class ProductRepository_TypedMock:
+    @property
+    def typed_class(self) -> type[ProductRepository] | None: ...
     @property
     def find_all(self) -> MockedMethod[[int], typing.Any]: ...
     @property
@@ -75,7 +82,8 @@ class User:
     pass
 
 class User_TypedMock:
-    pass
+    @property
+    def typed_class(self) -> type[User] | None: ...
 
 class UserMock(User_TypedMock):
     pass
@@ -87,6 +95,8 @@ class UserRepository:
     def save(self, user: tests.fixtures.sample_classes.User) -> typing.Any: ...
 
 class UserRepository_TypedMock:
+    @property
+    def typed_class(self) -> type[UserRepository] | None: ...
     @property
     def delete(self) -> MockedMethod[[int], typing.Any]: ...
     @property
@@ -116,6 +126,8 @@ class UserService:
     def validate_email(email: str) -> typing.Any: ...
 
 class UserService_TypedMock:
+    @property
+    def typed_class(self) -> type[UserService] | None: ...
     @property
     def async_create_user(self) -> MockedMethod[[str, str], typing.Any]: ...
     @property

@@ -139,7 +139,11 @@ class StubGenerator:
 
                 # Collect method info for both base class and TypedMock class
                 method_lines: list[str] = [f"class {class_name}:"]
-                typed_mock_lines: list[str] = [f"class {class_name}_TypedMock:"]
+                typed_mock_lines: list[str] = [
+                    f"class {class_name}_TypedMock:",
+                    "    @property",
+                    f"    def typed_class(self) -> type[{class_name}] | None: ...",
+                ]
                 has_methods = False
 
                 for name in dir(cls):
@@ -213,7 +217,7 @@ class StubGenerator:
                 # Add pass if class has no methods
                 if not has_methods:
                     method_lines.append("    pass")
-                    typed_mock_lines.append("    pass")
+                    # typed_mock_lines already has typed_class, so no pass needed
 
                 # Combine all class definitions
                 method_lines.extend(
