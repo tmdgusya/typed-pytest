@@ -1071,10 +1071,10 @@ class TestNestedMock:
 | T300 | Claude | DONE | async 메소드 타입 테스트 추가 |
 | T301 | Claude | DONE | async 메소드 타입 테스트 추가 (T300과 동일) |
 | T302 | Claude | DONE | IDE 자동완성용 py.typed 스텁 파일 생성 |
-| T400 | - | BACKLOG | |
-| T401 | - | BACKLOG | |
-| T402 | - | BACKLOG | |
-| T403 | - | BACKLOG | |
+| T400 | Claude | DONE | AsyncMockedMethod, async assertion methods 구현 완료 |
+| T401 | Claude | DONE | MockedProperty 구현 완료 (property mock 타입 지원) |
+| T402 | Claude | DONE | MockedClassMethod, MockedStaticMethod 구현 완료 |
+| T403 | Claude | DONE | Nested mock 지원 (property/classmethod/staticmethod/async 자동 감지) |
 
 ---
 
