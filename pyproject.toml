@@ -161,7 +161,7 @@ disallow_incomplete_defs = false
 [tool.pyright]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
-include = ["src", "tests"]
+include = ["src", "tests", "typed_pytest_generator"]
 exclude = [
     "**/__pycache__",
     "**/node_modules",
@@ -171,8 +171,6 @@ exclude = [
 stubPath = "typed_pytest_stubs"
 # Suppress warning for stub-only packages (no source file)
 reportMissingModuleSource = "none"
-# Stub package placeholder classes may cause attribute access warnings
-reportAttributeAccessIssue = false
 reportMissingImports = true
 reportMissingTypeStubs = false
 reportUnusedImport = true

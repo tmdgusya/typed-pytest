@@ -115,14 +115,15 @@ class StubGenerator:
             init_py_path.write_text(init_py_content)
             generated_files.append(init_py_path)
 
-            # Generate _runtime.py with classes that have actual method signatures
+            # Generate _runtime.py with simplified method signatures
+            # Use Any return types to avoid referencing test fixtures
             runtime_classes: list[str] = []
             for class_name, target in class_to_target.items():
                 cls = self._import_class(target)
                 if cls is None:
                     continue
 
-                # Generate methods with original signatures
+                # Generate methods with simplified signatures (Any return type)
                 method_lines: list[str] = [f"class {class_name}:"]
                 for name in dir(cls):
                     if name.startswith("_"):
@@ -131,7 +132,18 @@ class StubGenerator:
                     if callable(attr) and not isinstance(attr, type):
                         try:
                             sig = inspect.signature(attr)
-                            method_lines.append(f"    def {name}{sig}: ...")
+                            # Simplify signature: replace return type with Any
+                            sig_str = str(sig)
+                            # Handle return annotation replacement
+                            if "->" in sig_str:
+                                # Find the return type and replace with Any
+                                parts = sig_str.split("->")
+                                params = parts[0]
+                                params = params.rstrip()
+                                simplified = f"{params} -> typing.Any: ..."
+                                method_lines.append(f"    def {name}{simplified}")
+                            else:
+                                method_lines.append(f"    def {name}{sig}: ...")
                         except (ValueError, TypeError):
                             method_lines.append(f"    def {name}(self, *args, **kwargs): ...")
 
