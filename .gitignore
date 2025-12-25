@@ -36,3 +36,6 @@ Thumbs.db
 
 # uv
 uv.lock
+
+# Generated stub files
+typed_pytest_stubs/

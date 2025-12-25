@@ -31,7 +31,7 @@ class TestPatchObject:
 
     def test_patch_object_with_type(self, typed_mocker: TypedMocker) -> None:
         """new 타입 지정 시 TypedMock 반환 테스트."""
-        from tests.fixtures import sample_classes  # noqa: PLC0415
+        from tests.fixtures import sample_classes
 
         mock = typed_mocker.patch_object(sample_classes, "UserService", new=UserService)
 
@@ -128,7 +128,7 @@ class TestNestedPatches:
         mock2 = typed_mocker.patch_object(os, "getcwd")
         mock2.return_value = "/combined"
 
-        from tests.fixtures import sample_classes  # noqa: PLC0415
+        from tests.fixtures import sample_classes
 
         assert sample_classes.UserService.get_user(1) == {"id": 1}
         assert os.getcwd() == "/combined"  # noqa: PTH109
@@ -143,7 +143,7 @@ class TestNestedPatches:
 
         typed_mocker.patch_dict(os.environ, {"CONFIG_VAR": "test"})
 
-        from tests.fixtures import sample_classes  # noqa: PLC0415
+        from tests.fixtures import sample_classes
 
         assert sample_classes.UserService.get_user(1) == {"id": 1}
         assert os.environ["CONFIG_VAR"] == "test"

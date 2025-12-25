@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import sys
-from pathlib import Path
 
 from typed_pytest_generator import generate_stubs
 
@@ -66,8 +65,13 @@ Examples:
 
     if args.verbose:
         print(f"[typed-pytest-generator] Targets: {args.targets}", file=sys.stderr)
-        print(f"[typed-pytest-generator] Output dir: {args.output_dir}", file=sys.stderr)
-        print(f"[typed-pytest-generator] Include private: {args.include_private}", file=sys.stderr)
+        print(
+            f"[typed-pytest-generator] Output dir: {args.output_dir}", file=sys.stderr
+        )
+        print(
+            f"[typed-pytest-generator] Include private: {args.include_private}",
+            file=sys.stderr,
+        )
 
     try:
         generated = generate_stubs(
@@ -77,7 +81,10 @@ Examples:
         )
 
         if args.verbose:
-            print(f"[typed-pytest-generator] Generated {len(generated)} stub files:", file=sys.stderr)
+            print(
+                f"[typed-pytest-generator] Generated {len(generated)} stub files:",
+                file=sys.stderr,
+            )
             for path in generated:
                 print(f"  - {path}", file=sys.stderr)
 

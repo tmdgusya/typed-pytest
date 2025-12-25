@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import inspect
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
 
 # Type hints import - use string for forward compatibility
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from typing import ParamSpec
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
 @dataclass
 class MethodInfo:
     """Information about a method extracted from a class."""
+
     name: str
     method_type: str  # "method", "async", "property", "classmethod", "staticmethod"
     signature: inspect.Signature
@@ -25,14 +27,14 @@ class MethodInfo:
     parameters: list[inspect.Parameter]
 
 
-def _get_signature_with_hints(func: Callable) -> inspect.Signature:
+def _get_signature_with_hints(func: Callable[..., Any]) -> inspect.Signature:
     """Get function signature, falling back to annotations if needed."""
     try:
         return inspect.signature(func)
     except (ValueError, TypeError):
         # Fallback: try to get signature from annotations
-        annotations = getattr(func, "__annotations__", {})
-        params = []
+        annotations: dict[str, Any] = getattr(func, "__annotations__", {})
+        params: list[inspect.Parameter] = []
         for name, ann in annotations.items():
             if name != "return":
                 params.append(
@@ -45,7 +47,7 @@ def _get_signature_with_hints(func: Callable) -> inspect.Signature:
         return inspect.Signature(parameters=params)
 
 
-def _get_return_annotation(func: Callable) -> Any:
+def _get_return_annotation(func: Callable[..., Any]) -> Any:
     """Get return annotation from a function."""
     annotations = getattr(func, "__annotations__", {})
     return annotations.get("return", "Any")
@@ -112,7 +114,9 @@ def _analyze_attribute(name: str, attr: Any, cls: type) -> MethodInfo | None:
             method_type="staticmethod",
             signature=_get_signature_with_hints(func),
             return_annotation=_get_return_annotation(func),
-            parameters=list(_get_signature_with_hints(func).parameters.values())[1:],  # Skip cls
+            parameters=list(_get_signature_with_hints(func).parameters.values())[
+                1:
+            ],  # Skip cls
         )
 
     # Check for classmethod
@@ -123,7 +127,9 @@ def _analyze_attribute(name: str, attr: Any, cls: type) -> MethodInfo | None:
             method_type="classmethod",
             signature=_get_signature_with_hints(func),
             return_annotation=_get_return_annotation(func),
-            parameters=list(_get_signature_with_hints(func).parameters.values())[1:],  # Skip cls
+            parameters=list(_get_signature_with_hints(func).parameters.values())[
+                1:
+            ],  # Skip cls
         )
 
     # Check for property
@@ -152,7 +158,9 @@ def _analyze_attribute(name: str, attr: Any, cls: type) -> MethodInfo | None:
                 method_type="async",
                 signature=_get_signature_with_hints(dict_attr),
                 return_annotation=_get_return_annotation(dict_attr),
-                parameters=list(_get_signature_with_hints(dict_attr).parameters.values())[1:],  # Skip self
+                parameters=list(
+                    _get_signature_with_hints(dict_attr).parameters.values()
+                )[1:],  # Skip self
             )
 
     # Check for regular method (callable but not a type)
@@ -162,7 +170,9 @@ def _analyze_attribute(name: str, attr: Any, cls: type) -> MethodInfo | None:
             method_type="method",
             signature=_get_signature_with_hints(attr),
             return_annotation=_get_return_annotation(attr),
-            parameters=list(_get_signature_with_hints(attr).parameters.values())[1:],  # Skip self
+            parameters=list(_get_signature_with_hints(attr).parameters.values())[
+                1:
+            ],  # Skip self
         )
 
     return None
@@ -180,7 +190,11 @@ def format_signature_params(params: list[inspect.Parameter]) -> str:
     param_strs = []
     for param in params:
         if param.annotation != inspect.Parameter.empty:
-            ann_str = param.annotation.__name__ if hasattr(param.annotation, "__name__") else str(param.annotation)
+            ann_str = (
+                param.annotation.__name__
+                if hasattr(param.annotation, "__name__")
+                else str(param.annotation)
+            )
         else:
             ann_str = "Any"
 

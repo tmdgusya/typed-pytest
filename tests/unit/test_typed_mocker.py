@@ -135,7 +135,7 @@ class TestTypedMockerPatch:
         mock.get_user.return_value = {"id": 999}
 
         # Get UserService from patched module
-        from tests.fixtures import sample_classes  # noqa: PLC0415
+        from tests.fixtures import sample_classes
 
         # Verify patched class is a mock
         result = sample_classes.UserService.get_user(1)
@@ -272,12 +272,12 @@ class TestTypedMockerPublicAPI:
 
     def test_import_from_package(self) -> None:
         """패키지에서 TypedMocker를 임포트할 수 있는지 확인."""
-        from typed_pytest import TypedMocker as ImportedTypedMocker  # noqa: PLC0415
+        from typed_pytest import TypedMocker as ImportedTypedMocker
 
         assert ImportedTypedMocker is TypedMocker
 
     def test_in_all(self) -> None:
         """TypedMocker가 __all__에 포함되어 있는지 확인."""
-        import typed_pytest  # noqa: PLC0415
+        import typed_pytest
 
         assert "TypedMocker" in typed_pytest.__all__

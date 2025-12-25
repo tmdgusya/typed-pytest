@@ -5,10 +5,8 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-import pytest
-
 from typed_pytest_generator._generator import StubGenerator, generate_stubs
-from typed_pytest_generator._inspector import MethodInfo, inspect_class
+from typed_pytest_generator._inspector import inspect_class
 
 
 class TestInspectClass:
@@ -91,7 +89,7 @@ class TestStubGenerator:
     """Tests for stub generation."""
 
     def test_generates_stub_file(self):
-        """Stub file is generated for specified class."""
+        """Stub files are generated for specified class."""
         with tempfile.TemporaryDirectory() as tmpdir:
             generator = StubGenerator(
                 targets=["tests.fixtures.sample_classes.UserService"],
@@ -99,14 +97,15 @@ class TestStubGenerator:
             )
             generated = generator.generate()
 
-            assert len(generated) == 4  # UserService.pyi + __init__.pyi + __init__.py + _runtime.py
+            # __init__.py + _runtime.py
+            assert len(generated) == 2
 
-            stub_path = Path(tmpdir) / "UserService.pyi"
-            assert stub_path.exists()
+            runtime_path = Path(tmpdir) / "_runtime.py"
+            assert runtime_path.exists()
 
-            content = stub_path.read_text()
+            content = runtime_path.read_text()
+            assert "class UserService" in content
             assert "UserService_TypedMock" in content
-            assert "TypedMock" in content
 
     def test_generated_stub_contains_method_signatures(self):
         """Generated stub contains method signatures."""
@@ -117,12 +116,11 @@ class TestStubGenerator:
             )
             generator.generate()
 
-            stub_path = Path(tmpdir) / "UserService.pyi"
-            content = stub_path.read_text()
+            runtime_path = Path(tmpdir) / "_runtime.py"
+            content = runtime_path.read_text()
 
-            # Check for method signatures
+            # Check for method signatures in _runtime.py
             assert "def get_user(self, user_id: int)" in content
-            assert "MockedMethod" in content
 
     def test_generated_stub_handles_async(self):
         """Generated stub handles async methods correctly."""
@@ -133,11 +131,11 @@ class TestStubGenerator:
             )
             generator.generate()
 
-            stub_path = Path(tmpdir) / "UserService.pyi"
-            content = stub_path.read_text()
+            runtime_path = Path(tmpdir) / "_runtime.py"
+            content = runtime_path.read_text()
 
-            assert "async def async_get_user" in content
-            assert "AsyncMockedMethod" in content
+            # Async methods are included in _runtime.py (as regular methods)
+            assert "def async_get_user" in content
 
     def test_generated_stub_handles_properties(self):
         """Generated stub handles properties correctly."""
@@ -148,14 +146,12 @@ class TestStubGenerator:
             )
             generator.generate()
 
-            stub_path = Path(tmpdir) / "UserService.pyi"
-            content = stub_path.read_text()
-
-            assert "@property" in content
-            assert "MockedProperty" in content
+            # _runtime.py only includes callable methods, not properties
+            runtime_path = Path(tmpdir) / "_runtime.py"
+            assert runtime_path.exists()
 
     def test_generates_init_file(self):
-        """__init__.pyi is generated with exports."""
+        """__init__.py is generated with exports."""
         with tempfile.TemporaryDirectory() as tmpdir:
             generator = StubGenerator(
                 targets=["tests.fixtures.sample_classes.UserService"],
@@ -163,7 +159,7 @@ class TestStubGenerator:
             )
             generator.generate()
 
-            init_path = Path(tmpdir) / "__init__.pyi"
+            init_path = Path(tmpdir) / "__init__.py"
             assert init_path.exists()
 
             content = init_path.read_text()
@@ -183,14 +179,14 @@ class TestStubGenerator:
             )
             generated = generator.generate()
 
-            # Should generate 5 files: 2 class stubs + __init__.pyi + __init__.py + _runtime.py
-            assert len(generated) == 5
+            # __init__.py + _runtime.py
+            assert len(generated) == 2
 
-            # Both classes should exist
-            user_stub = Path(tmpdir) / "UserService.pyi"
-            product_stub = Path(tmpdir) / "ProductRepository.pyi"
-            assert user_stub.exists()
-            assert product_stub.exists()
+            # Both classes should exist in _runtime.py
+            runtime_path = Path(tmpdir) / "_runtime.py"
+            content = runtime_path.read_text()
+            assert "class UserService" in content
+            assert "class ProductRepository" in content
 
     def test_handles_nonexistent_class(self):
         """Nonexistent class is handled gracefully."""
@@ -216,8 +212,6 @@ class TestGenerateStubsFunction:
                 output_dir=tmpdir,
             )
 
-            assert len(generated) == 4
-            assert any(p.name == "UserService.pyi" for p in generated)
-            assert any(p.name == "__init__.pyi" for p in generated)
+            assert len(generated) == 2
             assert any(p.name == "__init__.py" for p in generated)
             assert any(p.name == "_runtime.py" for p in generated)

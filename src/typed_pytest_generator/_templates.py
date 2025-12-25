@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from typed_pytest_generator._inspector import MethodInfo, format_signature_params
+from typed_pytest_generator._inspector import MethodInfo
+
 
 # Template for original class stub (for use with typed_mock())
 ORIGINAL_CLASS_TEMPLATE = '''\
@@ -38,47 +39,47 @@ class {class_name}_TypedMock(TypedMock["{full_name}"]):
 '''
 
 # Template for method stubs (original class)
-ORIGINAL_METHOD_TEMPLATE = '''\
-    def {name}(self, {params}) -> {return_type}: ...'''
+ORIGINAL_METHOD_TEMPLATE = """\
+    def {name}(self, {params}) -> {return_type}: ..."""
 
-ORIGINAL_ASYNC_METHOD_TEMPLATE = '''\
-    async def {name}(self, {params}) -> {return_type}: ...'''
+ORIGINAL_ASYNC_METHOD_TEMPLATE = """\
+    async def {name}(self, {params}) -> {return_type}: ..."""
 
-ORIGINAL_PROPERTY_TEMPLATE = '''\
+ORIGINAL_PROPERTY_TEMPLATE = """\
     @property
-    def {name}(self) -> {return_type}: ...'''
+    def {name}(self) -> {return_type}: ..."""
 
-ORIGINAL_CLASSMETHOD_TEMPLATE = '''\
+ORIGINAL_CLASSMETHOD_TEMPLATE = """\
     @classmethod
-    def {name}({params}) -> {return_type}: ...'''
+    def {name}({params}) -> {return_type}: ..."""
 
-ORIGINAL_STATICMETHOD_TEMPLATE = '''\
+ORIGINAL_STATICMETHOD_TEMPLATE = """\
     @staticmethod
-    def {name}({params}) -> {return_type}: ...'''
+    def {name}({params}) -> {return_type}: ..."""
 
 # Template for imports section
-IMPORTS_TEMPLATE = '''\
+IMPORTS_TEMPLATE = """\
 import {module_name} as _orig_module
-'''
+"""
 
 # Template for method stubs
-METHOD_TEMPLATE = '''\
-    def {name}(self, {params}) -> MockedMethod[[{param_types}], {return_type}]: ...'''
+METHOD_TEMPLATE = """\
+    def {name}(self, {params}) -> MockedMethod[[{param_types}], {return_type}]: ..."""
 
-ASYNC_METHOD_TEMPLATE = '''\
-    async def {name}(self, {params}) -> AsyncMockedMethod[[{param_types}], {return_type}]: ...'''
+ASYNC_METHOD_TEMPLATE = """\
+    async def {name}(self, {params}) -> AsyncMockedMethod[[{param_types}], {return_type}]: ..."""
 
-PROPERTY_TEMPLATE = '''\
+PROPERTY_TEMPLATE = """\
     @property
-    def {name}(self) -> MockedProperty[{return_type}]: ...'''
+    def {name}(self) -> MockedProperty[{return_type}]: ..."""
 
-CLASSMETHOD_TEMPLATE = '''\
+CLASSMETHOD_TEMPLATE = """\
     @classmethod
-    def {name}({params}) -> MockedClassMethod[[{param_types}], {return_type}]: ...'''
+    def {name}({params}) -> MockedClassMethod[[{param_types}], {return_type}]: ..."""
 
-STATICMETHOD_TEMPLATE = '''\
+STATICMETHOD_TEMPLATE = """\
     @staticmethod
-    def {name}({params}) -> MockedStaticMethod[[{param_types}], {return_type}]: ...'''
+    def {name}({params}) -> MockedStaticMethod[[{param_types}], {return_type}]: ..."""
 
 
 def _format_type(typ: Any) -> str:
@@ -87,7 +88,7 @@ def _format_type(typ: Any) -> str:
         return "Any"
 
     if hasattr(typ, "__name__"):
-        return typ.__name__
+        return str(typ.__name__)
 
     if hasattr(typ, "__origin__"):
         origin = typ.__origin__
@@ -98,12 +99,14 @@ def _format_type(typ: Any) -> str:
     return str(typ)
 
 
-def _format_param_types(params: list) -> str:
+def _format_param_types(params: list[Any]) -> str:
     """Format parameters as type list for MockedMethod."""
-    return ", ".join(_format_type(p.annotation) for p in params if p.annotation != "Any")
+    return ", ".join(
+        _format_type(p.annotation) for p in params if p.annotation != "Any"
+    )
 
 
-def _format_params(params: list) -> str:
+def _format_params(params: list[Any]) -> str:
     """Format parameters for method signature."""
     if not params:
         return ""
@@ -228,12 +231,12 @@ def generate_init_stub(class_names: list[str]) -> str:
     Returns:
         Generated __init__.pyi content
     """
-    # Generate import statements
-    imports = []
+    # Generate import from _runtime (same as __init__.py for consistency)
+    import_items = []
     exports = []
 
     for name in class_names:
-        imports.append(f"from .{name} import {name}, {name}_TypedMock, {name}Mock")
+        import_items.extend([name, f"{name}_TypedMock", f"{name}Mock"])
         exports.append(f"    {name}")
         exports.append(f"    {name}_TypedMock")
         exports.append(f"    {name}Mock")
@@ -247,7 +250,9 @@ DO NOT EDIT MANUALLY.
 
 from __future__ import annotations
 
-{chr(10).join(imports)}
+from ._runtime import (
+    {",\n    ".join(import_items)},
+)
 
 __all__ = [
 {",\\n".join(exports)},

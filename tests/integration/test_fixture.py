@@ -80,7 +80,7 @@ class TestTypedMockerFixturePatch:
         )
         mock.get_user.return_value = {"id": 999, "name": "Patched"}
 
-        from tests.fixtures import sample_classes  # noqa: PLC0415
+        from tests.fixtures import sample_classes
 
         result = sample_classes.UserService.get_user(1)
 
@@ -185,7 +185,7 @@ class TestTypedMockerFixtureCleanup:
         )
         mock.get_user.return_value = {"id": 111}
 
-        from tests.fixtures import sample_classes  # noqa: PLC0415
+        from tests.fixtures import sample_classes
 
         assert sample_classes.UserService.get_user(1) == {"id": 111}
 
@@ -200,7 +200,7 @@ class TestTypedMockerFixtureCleanup:
         )
         mock.get_user.return_value = {"id": 222}
 
-        from tests.fixtures import sample_classes  # noqa: PLC0415
+        from tests.fixtures import sample_classes
 
         # Should be this test's value (222), not Part 1's value (111)
         assert sample_classes.UserService.get_user(1) == {"id": 222}

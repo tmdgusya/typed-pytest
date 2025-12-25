@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import ast
 import inspect
 import sys
 from importlib import import_module
 from pathlib import Path
-from typing import Any, TypeVar, get_type_hints
+from typing import TypeVar
 
-from typed_pytest_generator._inspector import MethodInfo, inspect_class
-from typed_pytest_generator._templates import generate_class_stub, generate_init_stub
+from typed_pytest_generator._inspector import inspect_class
+from typed_pytest_generator._templates import generate_class_stub
+
 
 T = TypeVar("T")
 
@@ -50,65 +50,66 @@ class StubGenerator:
         for target in self.targets:
             cls = self._import_class(target)
             if cls is None:
-                print(f"[typed-pytest-generator] Warning: Could not import {target}", file=sys.stderr)
+                print(
+                    f"[typed-pytest-generator] Warning: Could not import {target}",
+                    file=sys.stderr,
+                )
                 continue
 
             stub_content = self._generate_stub(cls, target)
             if stub_content:
                 class_name = cls.__name__
-                stub_path = self.output_dir / f"{class_name}.pyi"
-                stub_path.write_text(stub_content)
-                generated_files.append(stub_path)
                 stubs[class_name] = stub_content
                 class_to_target[class_name] = target
 
-        # Generate __init__.pyi
+        # Generate __init__.py for the stub package
         if stubs:
-            init_content = generate_init_stub(list(stubs.keys()))
-            init_path = self.output_dir / "__init__.pyi"
-            init_path.write_text(init_content)
-            generated_files.append(init_path)
-
             # Generate __init__.py for the stub package
             # This file allows importing from the stub package at runtime
             # while .pyi files provide type information
 
             # Generate import lines with commas
             import_parts: list[str] = []
-            for name in stubs.keys():
-                import_parts.extend([f"    {name}", f"    {name}_TypedMock", f"    {name}Mock"])
+            for name in stubs:
+                import_parts.extend(
+                    [f"    {name}", f"    {name}_TypedMock", f"    {name}Mock"]
+                )
             import_lines = [",\n".join(import_parts)]
 
             # Generate __all__ entries
             all_parts: list[str] = []
-            for name in stubs.keys():
-                all_parts.extend([f'    "{name}"', f'    "{name}_TypedMock"', f'    "{name}Mock"'])
+            for name in stubs:
+                all_parts.extend(
+                    [f'    "{name}"', f'    "{name}_TypedMock"', f'    "{name}Mock"']
+                )
             all_lines = [",\n".join(all_parts)]
 
             init_py_lines: list[str] = [
                 '"""Type stub package for typed-pytest.',
-                '',
-                'This package provides stub classes for IDE auto-completion.',
-                'Import from here to get type-safe mocks.',
-                '',
-                'Example:',
-                '    from typed_pytest_stubs import UserService',
-                '    mock = typed_mock(UserService)',
-                '    mock.get_user(1)  # Auto-complete works!',
+                "",
+                "This package provides stub classes for IDE auto-completion.",
+                "Import from here to get type-safe mocks.",
+                "",
+                "Example:",
+                "    from typed_pytest_stubs import UserService",
+                "    mock = typed_mock(UserService)",
+                "    mock.get_user(1)  # Auto-complete works!",
                 '"""',
-                'from __future__ import annotations',
-                '',
-                '# Re-export all stub classes from _runtime for runtime compatibility',
-                'from ._runtime import (',
+                "from __future__ import annotations",
+                "",
+                "# Re-export all stub classes from _runtime for runtime compatibility",
+                "from ._runtime import (",
             ]
             init_py_lines.extend(import_lines)
-            init_py_lines.extend([
-                ')',
-                '',
-                '__all__ = [',
-            ])
+            init_py_lines.extend(
+                [
+                    ")",
+                    "",
+                    "__all__ = [",
+                ]
+            )
             init_py_lines.extend(all_lines)
-            init_py_lines.extend([']', ''])
+            init_py_lines.extend(["]", ""])
 
             init_py_content = "\n".join(init_py_lines)
             init_py_path = self.output_dir / "__init__.py"
@@ -128,6 +129,11 @@ class StubGenerator:
                 for name in dir(cls):
                     if name.startswith("_"):
                         continue
+                    # Get raw attribute to check for staticmethod/classmethod
+                    raw_attr = inspect.getattr_static(cls, name)
+                    is_static = isinstance(raw_attr, staticmethod)
+                    is_classmethod = isinstance(raw_attr, classmethod)
+
                     attr = getattr(cls, name)
                     if callable(attr) and not isinstance(attr, type):
                         try:
@@ -138,35 +144,54 @@ class StubGenerator:
                             if "->" in sig_str:
                                 # Find the return type and replace with Any
                                 parts = sig_str.split("->")
-                                params = parts[0]
-                                params = params.rstrip()
+                                params = parts[0].rstrip()
                                 simplified = f"{params} -> typing.Any: ..."
-                                method_lines.append(f"    def {name}{simplified}")
                             else:
-                                method_lines.append(f"    def {name}{sig}: ...")
+                                simplified = f"{sig_str}: ..."
+
+                            if is_static:
+                                method_lines.append("    @staticmethod")
+                                method_lines.append(f"    def {name}{simplified}")
+                            elif is_classmethod:
+                                method_lines.append("    @classmethod")
+                                method_lines.append(
+                                    f"    def {name}(cls, {simplified[1:]}"
+                                    if simplified.startswith("(")
+                                    else f"    def {name}{simplified}"
+                                )
+                            else:
+                                method_lines.append(f"    def {name}{simplified}")
                         except (ValueError, TypeError):
-                            method_lines.append(f"    def {name}(self, *args, **kwargs): ...")
+                            method_lines.append(
+                                f"    def {name}(self, *args: typing.Any, **kwargs: typing.Any) -> typing.Any: ..."
+                            )
 
                 # Add TypedMock subclass and alias
-                method_lines.extend([
-                    "",
-                    f"class {class_name}_TypedMock:",
-                    f"    pass",
-                    f"class {class_name}Mock({class_name}_TypedMock):",
-                    f"    pass",
-                ])
+                method_lines.extend(
+                    [
+                        "",
+                        f"class {class_name}_TypedMock:",
+                        "    pass",
+                        f"class {class_name}Mock({class_name}_TypedMock):",
+                        "    pass",
+                    ]
+                )
                 runtime_classes.append("\n".join(method_lines))
 
-            runtime_py_content = "\n\n".join([
-                '"""Runtime-accessible placeholder classes for stub package.',
-                '',
-                'These classes are used at runtime when importing from typed_pytest_stubs.',
-                '"""',
-                'from __future__ import annotations',
-                '',
-                'import typing',
-                '',
-            ] + runtime_classes + [""])
+            runtime_py_content = "\n\n".join(
+                [
+                    '"""Runtime-accessible placeholder classes for stub package.',
+                    "",
+                    "These classes are used at runtime when importing from typed_pytest_stubs.",
+                    '"""',
+                    "from __future__ import annotations",
+                    "",
+                    "import typing",
+                    "",
+                ]
+                + runtime_classes
+                + [""]
+            )
             runtime_py_path = self.output_dir / "_runtime.py"
             runtime_py_path.write_text(runtime_py_content)
             generated_files.append(runtime_py_path)
@@ -185,9 +210,15 @@ class StubGenerator:
         try:
             module_path, class_name = target.rsplit(".", 1)
             module = import_module(module_path)
-            return getattr(module, class_name)
+            cls = getattr(module, class_name)
+            if isinstance(cls, type):
+                return cls
+            return None
         except (ImportError, AttributeError) as e:
-            print(f"[typed-pytest-generator] Error importing {target}: {e}", file=sys.stderr)
+            print(
+                f"[typed-pytest-generator] Error importing {target}: {e}",
+                file=sys.stderr,
+            )
             return None
 
     def _generate_stub(self, cls: type, full_name: str) -> str | None:
@@ -204,7 +235,10 @@ class StubGenerator:
             methods = inspect_class(cls, include_private=self.include_private)
             return generate_class_stub(cls.__name__, full_name, methods)
         except Exception as e:
-            print(f"[typed-pytest-generator] Error generating stub for {full_name}: {e}", file=sys.stderr)
+            print(
+                f"[typed-pytest-generator] Error generating stub for {full_name}: {e}",
+                file=sys.stderr,
+            )
             return None
 
     def _get_classes_with_methods(self, stubs: dict[str, str]) -> dict[str, type]:
@@ -217,7 +251,7 @@ class StubGenerator:
             Dictionary mapping targets to their actual class objects
         """
         result: dict[str, type] = {}
-        for target in stubs.keys():
+        for target in stubs:
             cls = self._import_class(target)
             if cls is not None:
                 result[target] = cls

@@ -161,14 +161,14 @@ disallow_incomplete_defs = false
 [tool.pyright]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
-include = ["src", "tests", "typed_pytest_generator"]
+include = ["src", "tests", "typed_pytest_stubs"]
 exclude = [
     "**/__pycache__",
     "**/node_modules",
     ".git",
+    # Generator uses dynamic introspection which is hard to type strictly
+    "src/typed_pytest_generator",
 ]
-# Stub path for typed_pytest_generator output
-stubPath = "typed_pytest_stubs"
 # Suppress warning for stub-only packages (no source file)
 reportMissingModuleSource = "none"
 reportMissingImports = true
@@ -229,8 +229,12 @@ ignore = [
     "PLR0913",# too many arguments
     "PLR2004",# magic value in comparison
     "TRY003", # long exception message
+    "TRY300", # consider moving return to else block
     "UP046",  # ParamSpec with Generic[] not compatible with new syntax
     "UP047",  # Generic function with TypeVar not compatible with new syntax in @overload
+    "TC001",  # move import into type-checking block (breaks runtime)
+    "TC003",  # move stdlib import into type-checking block
+    "RUF005", # consider iterable unpacking (less readable)
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -238,6 +242,11 @@ ignore = [
     "S101",   # assert allowed in tests
     "ARG",    # unused arguments (fixtures)
     "PLR2004",# magic values in tests
+    "PLC0415",# import not at top level (dynamic imports in tests)
+]
+"src/typed_pytest_generator/_generator.py" = [
+    "PLR0912",# too many branches (generator is complex by nature)
+    "PLR0915",# too many statements
 ]
 "conftest.py" = [
     "PLC0415",  # conftest.py requires lazy imports for proper plugin loading
@@ -251,7 +260,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["typed_pytest"]
+known-first-party = ["typed_pytest", "typed_pytest_generator"]
 force-single-line = false
 lines-after-imports = 2
 

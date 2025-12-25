@@ -80,6 +80,68 @@ def test_with_fixture(typed_mocker: TypedMocker):
     mock_service.get_user.assert_called_once_with(1)
 ```
 
+## Stub Generator
+
+`typed-pytest-generator` generates stub files for IDE auto-completion support. This allows your IDE to provide method signatures and type hints when using `typed_mock()`.
+
+### Basic Usage
+
+```bash
+# Generate stubs for your classes
+typed-pytest-generator -t myapp.services.UserService myapp.repos.ProductRepository
+
+# Specify custom output directory
+typed-pytest-generator -t myapp.services.UserService -o my_stubs
+
+# Include private methods (starting with _)
+typed-pytest-generator -t myapp.services.UserService --include-private
+
+# Verbose output
+typed-pytest-generator -t myapp.services.UserService -v
+```
+
+### Generated Files
+
+The generator creates the following structure:
+
+```
+typed_pytest_stubs/
+├── __init__.py      # Re-exports all stub classes
+└── _runtime.py      # Runtime class definitions with method signatures
+```
+
+### Using Generated Stubs
+
+```python
+# Import stub class for type-safe mocking
+from typed_pytest_stubs import UserService
+from typed_pytest import typed_mock
+
+def test_user_service():
+    # IDE provides auto-completion for UserService methods
+    mock = typed_mock(UserService)
+    mock.get_user.return_value = {"id": 1, "name": "Test"}
+
+    result = mock.get_user(1)
+    mock.get_user.assert_called_once_with(1)
+```
+
+### Configuration
+
+Add `typed_pytest_stubs/` to your `.gitignore` since these files are generated:
+
+```gitignore
+# Generated stub files
+typed_pytest_stubs/
+```
+
+For pyright/pylance users, add the stubs directory to your `pyproject.toml`:
+
+```toml
+[tool.pyright]
+include = ["src", "tests", "typed_pytest_stubs"]
+```
+
 ## Development
 
 ```bash

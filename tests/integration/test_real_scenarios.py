@@ -317,7 +317,7 @@ class TestPatchIntegration:
         )
         mock.get_user.return_value = {"id": 1, "name": "Patched User"}
 
-        from tests.fixtures import sample_classes  # noqa: PLC0415
+        from tests.fixtures import sample_classes
 
         # Use patched class
         result = sample_classes.UserService.get_user(1)
@@ -325,7 +325,7 @@ class TestPatchIntegration:
 
     def test_patch_object_for_single_method(self, typed_mocker: TypedMocker) -> None:
         """Test patching single method only."""
-        import os  # noqa: PLC0415
+        import os
 
         mock = typed_mocker.patch_object(os.path, "exists")
         mock.return_value = True
