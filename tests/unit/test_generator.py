@@ -99,7 +99,7 @@ class TestStubGenerator:
             )
             generated = generator.generate()
 
-            assert len(generated) == 2  # UserService.pyi + __init__.pyi
+            assert len(generated) == 3  # UserService.pyi + __init__.pyi + __init__.py
 
             stub_path = Path(tmpdir) / "UserService.pyi"
             assert stub_path.exists()
@@ -183,8 +183,8 @@ class TestStubGenerator:
             )
             generated = generator.generate()
 
-            # Should generate 3 files: 2 class stubs + __init__.pyi
-            assert len(generated) == 3
+            # Should generate 4 files: 2 class stubs + __init__.pyi + __init__.py
+            assert len(generated) == 4
 
             # Both classes should exist
             user_stub = Path(tmpdir) / "UserService.pyi"
@@ -216,6 +216,7 @@ class TestGenerateStubsFunction:
                 output_dir=tmpdir,
             )
 
-            assert len(generated) == 2
+            assert len(generated) == 3
             assert any(p.name == "UserService.pyi" for p in generated)
             assert any(p.name == "__init__.pyi" for p in generated)
+            assert any(p.name == "__init__.py" for p in generated)

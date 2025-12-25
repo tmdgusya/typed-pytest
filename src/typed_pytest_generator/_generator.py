@@ -67,6 +67,12 @@ class StubGenerator:
             init_path.write_text(init_content)
             generated_files.append(init_path)
 
+            # Generate __init__.py for the stub package
+            init_py_content = '# Type stub package - no runtime code\n'
+            init_py_path = self.output_dir / "__init__.py"
+            init_py_path.write_text(init_py_content)
+            generated_files.append(init_py_path)
+
         return generated_files
 
     def _import_class(self, target: str) -> type | None:

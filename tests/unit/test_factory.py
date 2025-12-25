@@ -2,7 +2,8 @@
 
 import pytest
 
-from tests.fixtures.sample_classes import ProductRepository, UserService
+from tests.fixtures.sample_classes import ProductRepository
+from typed_pytest_stubs import UserService
 from typed_pytest import TypedMock, typed_mock
 
 
