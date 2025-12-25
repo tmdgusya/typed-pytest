@@ -6,8 +6,9 @@ DO NOT EDIT MANUALLY.
 
 from __future__ import annotations
 
-from .UserService import UserService_TypedMock, UserServiceMock
+from .UserService import UserService, UserService_TypedMock, UserServiceMock
+from .ProductRepository import ProductRepository, ProductRepository_TypedMock, ProductRepositoryMock
 
 __all__ = [
-    UserService_TypedMock,\n    UserServiceMock,
+    UserService,\n    UserService_TypedMock,\n    UserServiceMock,\n    ProductRepository,\n    ProductRepository_TypedMock,\n    ProductRepositoryMock,
 ]
