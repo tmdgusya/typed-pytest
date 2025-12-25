@@ -167,6 +167,10 @@ exclude = [
     "**/node_modules",
     ".git",
 ]
+# Stub path for typed_pytest_generator output
+stubPath = "typed_pytest_stubs"
+# Suppress warning for stub-only packages (no source file)
+reportMissingModuleSource = "none"
 reportMissingImports = true
 reportMissingTypeStubs = false
 reportUnusedImport = true
