@@ -68,12 +68,14 @@ include = [
 [tool.typed-pytest-generator]
 # Targets are specified in user projects, not here
 # Example configuration:
-# targets = [
-#     "mypkg.services.UserService",
-#     "mypkg.repositories.OrderRepository",
+targets = [
+    "tests.fixtures.sample_classes.*",
+]
+output-dir = "typed_pytest_stubs"
+include-private = false
+# exclude-targets = [
+#     "mypkg.internal.PrivateHelper",
 # ]
-# output-dir = "typed_pytest_stubs"
-# include-private = false
 
 # ============================================================================
 # pytest configuration
@@ -155,19 +157,26 @@ module = "tests.*"
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
 
+# Generated stubs use special syntax for IDE auto-completion
+[[tool.mypy.overrides]]
+module = "typed_pytest_stubs.*"
+ignore_errors = true
+
 # ============================================================================
 # pyright configuration
 # ============================================================================
 [tool.pyright]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
-include = ["src", "tests", "typed_pytest_stubs"]
+include = ["src", "tests"]
 exclude = [
     "**/__pycache__",
     "**/node_modules",
     ".git",
     # Generator uses dynamic introspection which is hard to type strictly
     "src/typed_pytest_generator",
+    # Generated stubs use special syntax for IDE auto-completion
+    "typed_pytest_stubs",
 ]
 # Suppress warning for stub-only packages (no source file)
 reportMissingModuleSource = "none"
@@ -243,6 +252,8 @@ ignore = [
     "ARG",    # unused arguments (fixtures)
     "PLR2004",# magic values in tests
     "PLC0415",# import not at top level (dynamic imports in tests)
+    "PTH109", # os.getcwd() used in directory change patterns
+    "TC002",  # pytest import needed at runtime for fixtures
 ]
 "src/typed_pytest_generator/_generator.py" = [
     "PLR0912",# too many branches (generator is complex by nature)

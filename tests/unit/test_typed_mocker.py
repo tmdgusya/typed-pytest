@@ -5,8 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
+from typed_pytest_stubs import ProductRepository, UserService
 
-from tests.fixtures.sample_classes import ProductRepository, UserService
+from tests.fixtures.sample_classes import UserService as RealUserService
 from typed_pytest import TypedMock
 from typed_pytest._method import MockedMethod
 from typed_pytest._mocker import TypedMocker
@@ -148,7 +149,7 @@ class TestTypedMockerSpy:
     def test_spy_returns_mocked_method(self, mocker: MockerFixture) -> None:
         """Verify spy() returns MockedMethod."""
         typed_mocker = TypedMocker(mocker)
-        service = UserService()
+        service = RealUserService()
 
         spy = typed_mocker.spy(service, "validate_email")
 
@@ -157,7 +158,7 @@ class TestTypedMockerSpy:
     def test_spy_tracks_calls(self, mocker: MockerFixture) -> None:
         """Verify spy tracks calls."""
         typed_mocker = TypedMocker(mocker)
-        service = UserService()
+        service = RealUserService()
 
         spy = typed_mocker.spy(service, "validate_email")
 
@@ -173,7 +174,7 @@ class TestTypedMockerSpy:
     def test_spy_has_mock_attributes(self, mocker: MockerFixture) -> None:
         """spy가 Mock 속성을 가지는지 확인."""
         typed_mocker = TypedMocker(mocker)
-        service = UserService()
+        service = RealUserService()
 
         spy = typed_mocker.spy(service, "validate_email")
 
@@ -184,7 +185,7 @@ class TestTypedMockerSpy:
     def test_spy_call_count(self, mocker: MockerFixture) -> None:
         """spy가 호출 횟수를 추적하는지 확인."""
         typed_mocker = TypedMocker(mocker)
-        service = UserService()
+        service = RealUserService()
 
         spy = typed_mocker.spy(service, "validate_email")
 

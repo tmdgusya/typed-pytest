@@ -3,8 +3,8 @@
 from unittest.mock import MagicMock
 
 import pytest
+from typed_pytest_stubs import ProductRepository, UserService, typed_mock
 
-from tests.fixtures.sample_classes import ProductRepository, UserService
 from typed_pytest import TypedMock
 
 
@@ -19,14 +19,14 @@ class TestTypedMockCreation:
 
     def test_creation_with_spec(self) -> None:
         """spec으로 TypedMock 생성."""
-        mock = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
         assert mock is not None
         assert hasattr(mock, "get_user")
         assert hasattr(mock, "create_user")
 
     def test_creation_with_spec_set(self) -> None:
         """Create TypedMock with spec_set."""
-        mock = TypedMock(spec_set=UserService)
+        mock = typed_mock(UserService, spec_set=True)
         assert hasattr(mock, "get_user")
 
         # spec_set prevents setting non-existent attributes
@@ -40,7 +40,7 @@ class TestTypedMockCreation:
 
     def test_typed_class_stored(self) -> None:
         """Verify typed_class is stored."""
-        mock = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
         assert mock.typed_class is UserService
 
     def test_typed_class_none_without_spec(self) -> None:
@@ -59,7 +59,7 @@ class TestTypedMockGenericSyntax:
 
     def test_generic_type_annotation(self) -> None:
         """Verify generic type annotation works."""
-        mock: TypedMock[UserService] = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
         assert isinstance(mock, TypedMock)
 
 
@@ -68,13 +68,13 @@ class TestTypedMockMethodAccess:
 
     def test_method_returns_mock(self) -> None:
         """메소드 접근 시 Mock 반환."""
-        mock: TypedMock[UserService] = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
         method = mock.get_user
         assert method is not None
 
     def test_method_has_mock_attributes(self) -> None:
         """메소드가 Mock 속성을 가지는지 확인."""
-        mock: TypedMock[UserService] = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
         method = mock.get_user
 
         assert hasattr(method, "return_value")
@@ -85,7 +85,7 @@ class TestTypedMockMethodAccess:
 
     def test_method_call_works(self) -> None:
         """메소드 호출이 동작하는지 확인."""
-        mock: TypedMock[UserService] = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
         mock.get_user.return_value = {"id": 1, "name": "Test"}
 
         result = mock.get_user(1)
@@ -94,7 +94,7 @@ class TestTypedMockMethodAccess:
 
     def test_method_assertion_works(self) -> None:
         """메소드 assertion이 동작하는지 확인."""
-        mock: TypedMock[UserService] = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
 
         mock.get_user(1)
 
@@ -102,7 +102,7 @@ class TestTypedMockMethodAccess:
 
     def test_method_side_effect_works(self) -> None:
         """side_effect가 동작하는지 확인."""
-        mock: TypedMock[UserService] = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
         mock.get_user.side_effect = ValueError("User not found")
 
         with pytest.raises(ValueError, match="User not found"):
@@ -114,7 +114,7 @@ class TestTypedMockProperties:
 
     def test_call_count(self) -> None:
         """call_count가 동작하는지 확인."""
-        mock: TypedMock[UserService] = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
 
         assert mock.get_user.call_count == 0
 
@@ -127,7 +127,7 @@ class TestTypedMockProperties:
 
     def test_called(self) -> None:
         """called가 동작하는지 확인."""
-        mock: TypedMock[UserService] = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
 
         assert mock.get_user.called is False
 
@@ -136,7 +136,7 @@ class TestTypedMockProperties:
 
     def test_call_args(self) -> None:
         """Verify call_args works."""
-        mock: TypedMock[UserService] = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
 
         mock.get_user(1)
         mock.get_user(2, extra="value")
@@ -147,7 +147,7 @@ class TestTypedMockProperties:
 
     def test_call_args_list(self) -> None:
         """Verify call_args_list works."""
-        mock: TypedMock[UserService] = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
 
         mock.get_user(1)
         mock.get_user(2)
@@ -161,7 +161,7 @@ class TestTypedMockRepr:
 
     def test_repr_with_spec(self) -> None:
         """Verify repr when spec is present."""
-        mock = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
         repr_str = repr(mock)
 
         assert "TypedMock" in repr_str
@@ -180,7 +180,7 @@ class TestTypedMockChildMock:
 
     def test_child_mock_is_magicmock(self) -> None:
         """Verify child mock is MagicMock."""
-        mock: TypedMock[UserService] = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
         child = mock.get_user
 
         # Child is MagicMock but not TypedMock
@@ -192,7 +192,7 @@ class TestTypedMockRealScenarios:
 
     def test_service_with_repository(self) -> None:
         """서비스-리포지토리 패턴 테스트."""
-        mock_repo: TypedMock[ProductRepository] = TypedMock(spec=ProductRepository)
+        mock_repo = typed_mock(ProductRepository)
         mock_repo.find_by_id.return_value = None
 
         result = mock_repo.find_by_id("P001")
@@ -202,7 +202,7 @@ class TestTypedMockRealScenarios:
 
     def test_multiple_method_calls(self) -> None:
         """여러 메소드 호출 테스트."""
-        mock: TypedMock[UserService] = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
 
         mock.get_user.return_value = {"id": 1, "name": "John"}
         mock.create_user.return_value = {"id": 2, "name": "Jane"}
@@ -218,7 +218,7 @@ class TestTypedMockRealScenarios:
 
     def test_side_effect_sequence(self) -> None:
         """side_effect 시퀀스 테스트."""
-        mock: TypedMock[UserService] = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
         mock.get_user.side_effect = [
             {"id": 1, "name": "First"},
             {"id": 2, "name": "Second"},
@@ -233,7 +233,7 @@ class TestTypedMockRealScenarios:
 
     def test_reset_mock(self) -> None:
         """reset_mock 테스트."""
-        mock: TypedMock[UserService] = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
 
         mock.get_user(1)
         mock.get_user(2)
@@ -251,13 +251,13 @@ class TestTypedMockClassMethod:
 
     def test_has_classmethod(self) -> None:
         """Verify classmethod is accessible."""
-        mock = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
 
         assert hasattr(mock, "from_config")
 
     def test_classmethod_call_works(self) -> None:
         """Classmethod call works through TypedMock."""
-        mock = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
         mock.from_config.return_value = mock
 
         result = mock.from_config({"key": "value"})
@@ -267,7 +267,7 @@ class TestTypedMockClassMethod:
 
     def test_classmethod_return_value(self) -> None:
         """Classmethod return_value works."""
-        mock = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
         mock.from_config.return_value = UserService()
 
         result = mock.from_config({})
@@ -276,7 +276,7 @@ class TestTypedMockClassMethod:
 
     def test_classmethod_assertions(self) -> None:
         """Classmethod assertion methods work."""
-        mock = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
 
         mock.from_config({"test": True})
 
@@ -290,13 +290,13 @@ class TestTypedMockStaticMethod:
 
     def test_has_staticmethod(self) -> None:
         """Verify staticmethod is accessible."""
-        mock = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
 
         assert hasattr(mock, "validate_email")
 
     def test_staticmethod_call_works(self) -> None:
         """Staticmethod call works through TypedMock."""
-        mock = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
         mock.validate_email.return_value = True
 
         result = mock.validate_email("test@example.com")
@@ -306,7 +306,7 @@ class TestTypedMockStaticMethod:
 
     def test_staticmethod_return_value(self) -> None:
         """Staticmethod return_value works."""
-        mock = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
         mock.validate_email.return_value = False
 
         result = mock.validate_email("invalid")
@@ -315,7 +315,7 @@ class TestTypedMockStaticMethod:
 
     def test_staticmethod_assertions(self) -> None:
         """Staticmethod assertion methods work."""
-        mock = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
 
         mock.validate_email("user@test.com")
 
@@ -329,14 +329,14 @@ class TestTypedMockProperty:
 
     def test_has_property(self) -> None:
         """Verify property is accessible."""
-        mock = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
 
         assert hasattr(mock, "connection_status")
         assert hasattr(mock, "is_connected")
 
     def test_property_mock_access(self) -> None:
         """Property access returns a mock."""
-        mock = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
 
         result = mock.connection_status
 
@@ -346,7 +346,7 @@ class TestTypedMockProperty:
 
     def test_property_with_side_effect(self) -> None:
         """Property with side_effect works."""
-        mock = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
         # Store the property mock to ensure we use the same instance
         prop = mock.connection_status
         prop.side_effect = ValueError("not connected")
@@ -356,7 +356,7 @@ class TestTypedMockProperty:
 
     def test_property_nested_mock(self) -> None:
         """Property returns typed mock for nested access."""
-        mock = TypedMock(spec=UserService)
+        mock = typed_mock(UserService)
 
         # Accessing a property returns a child mock
         prop = mock.connection_status

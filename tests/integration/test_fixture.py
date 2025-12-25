@@ -6,8 +6,9 @@ pytest entry-point로 등록된 typed_mocker fixture가 올바르게 동작하�
 from __future__ import annotations
 
 import pytest
+from typed_pytest_stubs import ProductRepository, UserService
 
-from tests.fixtures.sample_classes import ProductRepository, UserService
+from tests.fixtures.sample_classes import UserService as RealUserService
 from typed_pytest import TypedMock
 from typed_pytest._method import MockedMethod
 from typed_pytest._mocker import TypedMocker
@@ -92,7 +93,7 @@ class TestTypedMockerFixtureSpy:
 
     def test_spy_returns_mocked_method(self, typed_mocker: TypedMocker) -> None:
         """spy()가 MockedMethod를 반환하는지 확인."""
-        service = UserService()
+        service = RealUserService()
 
         spy = typed_mocker.spy(service, "validate_email")
 
@@ -102,7 +103,7 @@ class TestTypedMockerFixtureSpy:
         self, typed_mocker: TypedMocker
     ) -> None:
         """spy가 원본 동작을 유지하면서 호출을 추적하는지 확인."""
-        service = UserService()
+        service = RealUserService()
 
         spy = typed_mocker.spy(service, "validate_email")
         result = service.validate_email("test@example.com")

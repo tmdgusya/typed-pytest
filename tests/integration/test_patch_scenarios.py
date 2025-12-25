@@ -8,7 +8,8 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING
 
-from tests.fixtures.sample_classes import UserService
+from typed_pytest_stubs import UserService
+
 from typed_pytest import TypedMock
 
 
@@ -24,7 +25,7 @@ class TestPatchObject:
         mock = typed_mocker.patch_object(os, "getcwd")
         mock.return_value = "/mocked/path"
 
-        result = os.getcwd()  # noqa: PTH109
+        result = os.getcwd()
 
         assert result == "/mocked/path"
         mock.assert_called_once()
@@ -56,7 +57,7 @@ class TestPatchObject:
         mock.return_value = "/fake"
 
         # Inside test, it's mocked
-        assert os.getcwd() == "/fake"  # noqa: PTH109
+        assert os.getcwd() == "/fake"
         # After test ends, pytest-mock automatically restores
         # (This test is still running, so still mocked)
         assert os.getcwd != original_getcwd
@@ -114,7 +115,7 @@ class TestNestedPatches:
         mock2 = typed_mocker.patch_object(os.path, "exists")
         mock2.return_value = True
 
-        assert os.getcwd() == "/path1"  # noqa: PTH109
+        assert os.getcwd() == "/path1"
         assert os.path.exists("/any/path") is True  # noqa: PTH110
 
     def test_patch_and_patch_object_together(self, typed_mocker: TypedMocker) -> None:
@@ -131,7 +132,7 @@ class TestNestedPatches:
         from tests.fixtures import sample_classes
 
         assert sample_classes.UserService.get_user(1) == {"id": 1}
-        assert os.getcwd() == "/combined"  # noqa: PTH109
+        assert os.getcwd() == "/combined"
 
     def test_patch_with_patch_dict(self, typed_mocker: TypedMocker) -> None:
         """patch()와 patch_dict()를 함께 사용하는 테스트."""
