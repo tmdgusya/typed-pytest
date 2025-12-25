@@ -2,6 +2,10 @@
 
 Type-safe mocking for pytest - preserve original type hints while using mock features.
 
+https://github.com/user-attachments/assets/f542f815-731b-4398-a8b6-fefadef19d7b
+
+
+
 ## Problem
 
 When using pytest with `unittest.mock`, type inference becomes problematic:
