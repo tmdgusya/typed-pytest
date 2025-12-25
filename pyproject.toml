@@ -3,7 +3,7 @@ name = "typed-pytest"
 version = "0.1.0"
 description = "Type-safe mocking for pytest - preserve original type hints while using mock features"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "typed-pytest contributors" }]
 keywords = ["pytest", "mock", "typing", "type-hints", "testing"]
@@ -13,6 +13,9 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Testing",
     "Topic :: Software Development :: Testing :: Mocking",
@@ -21,6 +24,7 @@ classifiers = [
 dependencies = [
     "pytest>=8.0",
     "pytest-mock>=3.11",
+    "tomli>=2.0; python_version < '3.11'",
 ]
 
 [project.optional-dependencies]

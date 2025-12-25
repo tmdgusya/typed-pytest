@@ -68,7 +68,7 @@ pip install typed-pytest
 
 ## Requirements
 
-- Python 3.13+
+- Python 3.10+
 - pytest 8.0+
 - pytest-mock 3.11+
 

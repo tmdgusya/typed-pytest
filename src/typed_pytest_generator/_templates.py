@@ -241,6 +241,10 @@ def generate_init_stub(class_names: list[str]) -> str:
         exports.append(f"    {name}_TypedMock")
         exports.append(f"    {name}Mock")
 
+    # Join with newlines (avoid backslash in f-string for Python 3.10 compatibility)
+    import_items_str = ",\n    ".join(import_items)
+    exports_str = ",\n".join(exports)
+
     return f'''\
 """Auto-generated TypedMock stubs for IDE auto-completion.
 
@@ -251,10 +255,10 @@ DO NOT EDIT MANUALLY.
 from __future__ import annotations
 
 from ._runtime import (
-    {",\n    ".join(import_items)},
+    {import_items_str},
 )
 
 __all__ = [
-{",\\n".join(exports)},
+{exports_str},
 ]
 '''

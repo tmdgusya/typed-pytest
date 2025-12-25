@@ -4,7 +4,9 @@ These classes are used to test typed-pytest functionality.
 They include various method signatures and types."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Generic, TypeVar
+
+T = TypeVar("T")
 
 
 # =============================================================================
@@ -144,7 +146,7 @@ class UserService:
 # =============================================================================
 
 
-class GenericService[T]:
+class GenericService(Generic[T]):
     """Generic service - for testing generic types."""
 
     def get(self, id: int) -> T | None:

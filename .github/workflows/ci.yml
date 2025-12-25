@@ -58,8 +58,11 @@ jobs:
         run: uv run ${{ matrix.checker }} src/
 
   test:
-    name: Test
+    name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
 
@@ -68,21 +71,22 @@ jobs:
         with:
           version: "latest"
 
-      - name: Set up Python
-        run: uv python install ${{ env.PYTHON_VERSION }}
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync --all-extras
+        run: uv sync --all-extras --python ${{ matrix.python-version }}
 
       - name: Run tests with coverage
         run: |
-          uv run pytest tests/ \
+          uv run --python ${{ matrix.python-version }} pytest tests/ \
             --cov \
             --cov-fail-under=80 \
             --cov-report=term-missing \
             --cov-report=xml
 
       - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.13'
         uses: codecov/codecov-action@v4
         with:
           files: coverage.xml
