@@ -1,4 +1,4 @@
-.PHONY: all lint format test typecheck coverage clean help
+.PHONY: all lint format test typecheck coverage clean help build publish-test publish
 
 # Default target
 all: lint format test coverage
@@ -48,16 +48,34 @@ clean:
 # CI validation (all checks)
 ci: lint format-check typecheck coverage
 
+# Build distribution packages
+build:
+	@echo "Building distribution..."
+	uv build
+
+# Publish to TestPyPI (for testing)
+publish-test: build
+	@echo "Publishing to TestPyPI..."
+	uv publish --publish-url https://test.pypi.org/legacy/
+
+# Publish to PyPI
+publish: build
+	@echo "Publishing to PyPI..."
+	uv publish
+
 # Help
 help:
 	@echo "Available targets:"
-	@echo "  all        - Run lint, format, test, and coverage (default)"
-	@echo "  lint       - Run ruff check"
-	@echo "  format     - Format code with ruff"
+	@echo "  all          - Run lint, format, test, and coverage (default)"
+	@echo "  lint         - Run ruff check"
+	@echo "  format       - Format code with ruff"
 	@echo "  format-check - Check code format"
-	@echo "  typecheck  - Run mypy and pyright"
-	@echo "  test       - Run all tests"
-	@echo "  coverage   - Run tests with coverage (fails if < 80%)"
-	@echo "  ci         - Run all CI checks"
-	@echo "  clean      - Clean cache files"
-	@echo "  help       - Show this help"
+	@echo "  typecheck    - Run mypy and pyright"
+	@echo "  test         - Run all tests"
+	@echo "  coverage     - Run tests with coverage (fails if < 80%)"
+	@echo "  ci           - Run all CI checks"
+	@echo "  build        - Build distribution packages"
+	@echo "  publish-test - Publish to TestPyPI"
+	@echo "  publish      - Publish to PyPI"
+	@echo "  clean        - Clean cache files"
+	@echo "  help         - Show this help"

@@ -35,10 +35,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/your-org/typed-pytest"
-Documentation = "https://github.com/your-org/typed-pytest#readme"
-Repository = "https://github.com/your-org/typed-pytest"
-Issues = "https://github.com/your-org/typed-pytest/issues"
+Homepage = "https://github.com/tmdgusya/typed-pytest"
+Documentation = "https://github.com/tmdgusya/typed-pytest#readme"
+Repository = "https://github.com/tmdgusya/typed-pytest"
+Issues = "https://github.com/tmdgusya/typed-pytest/issues"
 
 # Note: typed_mocker fixture is registered in tests/conftest.py instead of
 # using entry-points. This is intentional to ensure proper coverage measurement
