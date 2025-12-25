@@ -148,6 +148,21 @@ class TestMockedProperty:
         prop.side_effect = None
         assert prop.side_effect is None
 
+    def test_side_effect_mixed_list(self) -> None:
+        """side_effect with mixed types in list (now supported by list[Any])."""
+        mock = MagicMock()
+        prop: MockedProperty[int] = MockedProperty(mock)
+
+        # Mix of values and exceptions
+        prop.side_effect = [1, ValueError("error"), 2]
+
+        # Properties are typically accessed, but here we test the mock's side_effect behavior
+        # When accessed as a method (common in some mock patterns)
+        assert mock() == 1
+        with pytest.raises(ValueError, match="error"):
+            mock()
+        assert mock() == 2
+
     def test_call_args(self) -> None:
         """call_args property."""
         mock = MagicMock()

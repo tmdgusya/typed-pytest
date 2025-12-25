@@ -75,7 +75,7 @@ class MockedProperty(Generic[R]):
     @property
     def side_effect(
         self,
-    ) -> Callable[..., R] | BaseException | list[R] | None:
+    ) -> Callable[..., R] | BaseException | list[Any] | None:
         """Side effect to raise when the property is accessed.
 
         - Callable: Function to execute when accessed.
@@ -87,7 +87,7 @@ class MockedProperty(Generic[R]):
 
     @side_effect.setter
     def side_effect(
-        self, value: Callable[..., R] | BaseException | list[R] | None
+        self, value: Callable[..., R] | BaseException | list[Any] | None
     ) -> None:
         """Sets the side effect to raise when the property is accessed.
 
