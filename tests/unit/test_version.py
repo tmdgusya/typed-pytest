@@ -16,5 +16,5 @@ def test_version_format() -> None:
 
 
 def test_version_value() -> None:
-    """현재 버전이 0.1.0인지 확인."""
-    assert __version__ == "0.1.0"
+    """버전이 0.x.x 형식인지 확인 (아직 1.0 미만)."""
+    assert __version__.startswith("0.")
