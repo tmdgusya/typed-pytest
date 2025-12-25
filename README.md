@@ -32,10 +32,19 @@ service.get_user.assert_called_once()  # assert_called_once has no type hint!
 ## Solution
 
 `typed-pytest` provides type-safe mocking with:
+- **Catch typos at lint time** - Misspelled method names are caught by mypy/pyright before running tests
 - **Original class method signatures** - Full auto-completion for method names and parameters
 - **Type-checked mock assertions** - `assert_called_once_with()` and other assertions have full type hints
 - **Type-checked mock properties** - `return_value`, `side_effect`, `call_count` are properly typed
 - **IDE auto-completion** for both original methods and mock methods
+
+```python
+from typed_pytest_stubs import typed_mock, UserService
+
+mock = typed_mock(UserService)
+mock.get_usr  # ❌ Caught by type checker: "get_usr" is not a known member
+mock.get_user.assert_called_once_with(1)  # ✅ Type-checked!
+```
 
 ```python
 from typed_pytest import TypedMock, typed_mock
