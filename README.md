@@ -30,9 +30,10 @@ service.get_user.assert_called_once()  # assert_called_once has no type hint!
 ## Solution
 
 `typed-pytest` provides type-safe mocking with:
+- **Original class method signatures** - Full auto-completion for method names and parameters
 - **Type-checked mock assertions** - `assert_called_once_with()` and other assertions have full type hints
 - **Type-checked mock properties** - `return_value`, `side_effect`, `call_count` are properly typed
-- **IDE auto-completion** for mock methods
+- **IDE auto-completion** for both original methods and mock methods
 
 ```python
 from typed_pytest import TypedMock, typed_mock
@@ -87,6 +88,25 @@ def test_with_fixture(typed_mocker: TypedMocker):
 ## Stub Generator
 
 `typed-pytest-generator` generates stub files for IDE auto-completion support. This allows your IDE to provide method signatures and type hints when using `typed_mock()`.
+
+### Important: Environment Requirements
+
+The generator **must run in your project's virtual environment** because it imports your classes to inspect their method signatures. This means:
+
+```bash
+# ✅ Correct: Run in project environment (has access to your dependencies)
+uv add typed-pytest --dev
+uv run typed-pytest-generator
+
+# ❌ Wrong: uvx runs in isolated environment (no access to your dependencies)
+uvx typed-pytest-generator  # Will fail if your classes import sqlalchemy, etc.
+```
+
+**Why?** The generator uses Python's `inspect` module to extract method signatures, which requires actually importing your classes. If your classes depend on `sqlalchemy`, `pydantic`, or other packages, those must be installed in the environment where the generator runs.
+
+**Common errors:**
+- `No module named 'sqlalchemy'` - Your class imports a package not in the isolated environment
+- `circular import` - Your codebase has circular imports (fix with `TYPE_CHECKING` blocks)
 
 ### Basic Usage
 
@@ -214,7 +234,7 @@ include = ["src", "tests", "typed_pytest_stubs"]
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/typed-pytest.git
+git clone https://github.com/tmdgusya/typed-pytest.git
 cd typed-pytest
 
 # Install dependencies
