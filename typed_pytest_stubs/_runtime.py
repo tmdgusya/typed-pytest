@@ -1,12 +1,11 @@
 """Runtime-accessible placeholder classes for stub package.
 
-
-
 These classes are used at runtime when importing from typed_pytest_stubs.
 
 """
-
 from __future__ import annotations
+
+import typing
 
 
 

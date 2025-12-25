@@ -152,7 +152,8 @@ class StubGenerator:
                 '"""',
                 'from __future__ import annotations',
                 '',
-                "",
+                'import typing',
+                '',
             ] + runtime_classes + [""])
             runtime_py_path = self.output_dir / "_runtime.py"
             runtime_py_path.write_text(runtime_py_content)
