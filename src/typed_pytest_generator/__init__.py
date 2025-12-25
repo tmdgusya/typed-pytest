@@ -1,6 +1,6 @@
 """typed-pytest-generator - Generate .pyi stub files for TypedMock auto-completion."""
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 from typed_pytest_generator._config import (
     ConfigLoadError,
