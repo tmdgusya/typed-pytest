@@ -6,8 +6,11 @@ These are static type checks, not runtime tests."""
 import contextlib
 from typing import Any
 
-from tests.fixtures.sample_classes import ProductRepository, UserService
-from typed_pytest import TypedMock, typed_mock
+from typed_pytest_stubs import ProductRepository, UserService, typed_mock
+
+from tests.fixtures.sample_classes import UserService as RealUserService
+from typed_pytest import TypedMock
+from typed_pytest import typed_mock as original_typed_mock
 
 
 def test_typed_mock_creation() -> None:
@@ -198,8 +201,9 @@ def test_async_assert_awaited_methods() -> None:
 
     Note: assert_awaited* methods should be called after actual await.
     We only verify method existence for type validation.
+    Uses RealUserService which has async def methods.
     """
-    mock = typed_mock(UserService)
+    mock = original_typed_mock(RealUserService)
 
     # Verify await assertion methods exist (type-only)
     # These would error at runtime, so use only for type checking
@@ -209,8 +213,11 @@ def test_async_assert_awaited_methods() -> None:
 
 
 def test_async_mock_properties() -> None:
-    """Async Mock property access."""
-    mock = typed_mock(UserService)
+    """Async Mock property access.
+
+    Uses RealUserService which has async def methods.
+    """
+    mock = original_typed_mock(RealUserService)
 
     # Property access
     count: int = mock.async_get_user.call_count

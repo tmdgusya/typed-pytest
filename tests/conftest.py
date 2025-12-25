@@ -6,9 +6,17 @@ pytest 공통 fixture 정의.
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
+
+
+# Add typed_pytest_stubs to path for import resolution
+_stubs_path = Path(__file__).parent.parent / "typed_pytest_stubs"
+if _stubs_path.is_dir() and str(_stubs_path) not in sys.path:
+    sys.path.insert(0, str(_stubs_path))
 
 
 if TYPE_CHECKING:

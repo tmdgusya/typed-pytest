@@ -6,8 +6,9 @@ pytest entry-point로 등록된 typed_mocker fixture가 올바르게 동작하�
 from __future__ import annotations
 
 import pytest
+from typed_pytest_stubs import ProductRepository, UserService
 
-from tests.fixtures.sample_classes import ProductRepository, UserService
+from tests.fixtures.sample_classes import UserService as RealUserService
 from typed_pytest import TypedMock
 from typed_pytest._method import MockedMethod
 from typed_pytest._mocker import TypedMocker
@@ -80,7 +81,7 @@ class TestTypedMockerFixturePatch:
         )
         mock.get_user.return_value = {"id": 999, "name": "Patched"}
 
-        from tests.fixtures import sample_classes  # noqa: PLC0415
+        from tests.fixtures import sample_classes
 
         result = sample_classes.UserService.get_user(1)
 
@@ -92,7 +93,7 @@ class TestTypedMockerFixtureSpy:
 
     def test_spy_returns_mocked_method(self, typed_mocker: TypedMocker) -> None:
         """spy()가 MockedMethod를 반환하는지 확인."""
-        service = UserService()
+        service = RealUserService()
 
         spy = typed_mocker.spy(service, "validate_email")
 
@@ -102,7 +103,7 @@ class TestTypedMockerFixtureSpy:
         self, typed_mocker: TypedMocker
     ) -> None:
         """spy가 원본 동작을 유지하면서 호출을 추적하는지 확인."""
-        service = UserService()
+        service = RealUserService()
 
         spy = typed_mocker.spy(service, "validate_email")
         result = service.validate_email("test@example.com")
@@ -185,7 +186,7 @@ class TestTypedMockerFixtureCleanup:
         )
         mock.get_user.return_value = {"id": 111}
 
-        from tests.fixtures import sample_classes  # noqa: PLC0415
+        from tests.fixtures import sample_classes
 
         assert sample_classes.UserService.get_user(1) == {"id": 111}
 
@@ -200,7 +201,7 @@ class TestTypedMockerFixtureCleanup:
         )
         mock.get_user.return_value = {"id": 222}
 
-        from tests.fixtures import sample_classes  # noqa: PLC0415
+        from tests.fixtures import sample_classes
 
         # Should be this test's value (222), not Part 1's value (111)
         assert sample_classes.UserService.get_user(1) == {"id": 222}

@@ -5,8 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
+from typed_pytest_stubs import ProductRepository, UserService
 
-from tests.fixtures.sample_classes import ProductRepository, UserService
+from tests.fixtures.sample_classes import UserService as RealUserService
 from typed_pytest import TypedMock
 from typed_pytest._method import MockedMethod
 from typed_pytest._mocker import TypedMocker
@@ -135,7 +136,7 @@ class TestTypedMockerPatch:
         mock.get_user.return_value = {"id": 999}
 
         # Get UserService from patched module
-        from tests.fixtures import sample_classes  # noqa: PLC0415
+        from tests.fixtures import sample_classes
 
         # Verify patched class is a mock
         result = sample_classes.UserService.get_user(1)
@@ -148,7 +149,7 @@ class TestTypedMockerSpy:
     def test_spy_returns_mocked_method(self, mocker: MockerFixture) -> None:
         """Verify spy() returns MockedMethod."""
         typed_mocker = TypedMocker(mocker)
-        service = UserService()
+        service = RealUserService()
 
         spy = typed_mocker.spy(service, "validate_email")
 
@@ -157,7 +158,7 @@ class TestTypedMockerSpy:
     def test_spy_tracks_calls(self, mocker: MockerFixture) -> None:
         """Verify spy tracks calls."""
         typed_mocker = TypedMocker(mocker)
-        service = UserService()
+        service = RealUserService()
 
         spy = typed_mocker.spy(service, "validate_email")
 
@@ -173,7 +174,7 @@ class TestTypedMockerSpy:
     def test_spy_has_mock_attributes(self, mocker: MockerFixture) -> None:
         """spy가 Mock 속성을 가지는지 확인."""
         typed_mocker = TypedMocker(mocker)
-        service = UserService()
+        service = RealUserService()
 
         spy = typed_mocker.spy(service, "validate_email")
 
@@ -184,7 +185,7 @@ class TestTypedMockerSpy:
     def test_spy_call_count(self, mocker: MockerFixture) -> None:
         """spy가 호출 횟수를 추적하는지 확인."""
         typed_mocker = TypedMocker(mocker)
-        service = UserService()
+        service = RealUserService()
 
         spy = typed_mocker.spy(service, "validate_email")
 
@@ -272,12 +273,12 @@ class TestTypedMockerPublicAPI:
 
     def test_import_from_package(self) -> None:
         """패키지에서 TypedMocker를 임포트할 수 있는지 확인."""
-        from typed_pytest import TypedMocker as ImportedTypedMocker  # noqa: PLC0415
+        from typed_pytest import TypedMocker as ImportedTypedMocker
 
         assert ImportedTypedMocker is TypedMocker
 
     def test_in_all(self) -> None:
         """TypedMocker가 __all__에 포함되어 있는지 확인."""
-        import typed_pytest  # noqa: PLC0415
+        import typed_pytest
 
         assert "TypedMocker" in typed_pytest.__all__

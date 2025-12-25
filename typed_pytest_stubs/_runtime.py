@@ -1,0 +1,186 @@
+"""Runtime-accessible placeholder classes for stub package.
+
+
+
+These classes are used at runtime when importing from typed_pytest_stubs.
+
+The _TypedMock classes provide IDE auto-completion for mock methods.
+
+"""
+
+from __future__ import annotations
+
+
+
+import typing
+
+
+
+from typed_pytest import MockedMethod
+
+
+
+class GenericService:
+    def get(self, id: int) -> typing.Any: ...
+    def get_all(self) -> typing.Any: ...
+    def save(self, item: T) -> typing.Any: ...
+
+class GenericService_TypedMock:
+    @property
+    def typed_class(self) -> type[GenericService] | None: ...
+    @property
+    def get(self) -> MockedMethod[[int], typing.Any]: ...
+    @property
+    def get_all(self) -> MockedMethod[[], typing.Any]: ...
+    @property
+    def save(self) -> MockedMethod[[T], typing.Any]: ...
+
+class GenericServiceMock(GenericService_TypedMock):
+    pass
+
+class NestedService:
+    def get_user_products(self, user_id: int) -> typing.Any: ...
+
+class NestedService_TypedMock:
+    @property
+    def typed_class(self) -> type[NestedService] | None: ...
+    @property
+    def get_user_products(self) -> MockedMethod[[int], typing.Any]: ...
+
+class NestedServiceMock(NestedService_TypedMock):
+    pass
+
+class Product:
+    pass
+
+class Product_TypedMock:
+    @property
+    def typed_class(self) -> type[Product] | None: ...
+
+class ProductMock(Product_TypedMock):
+    pass
+
+class ProductRepository:
+    def find_all(self, limit: int = 10) -> typing.Any: ...
+    def find_by_id(self, product_id: str) -> typing.Any: ...
+    def search(self, query: str, *, max_results: int = 100) -> typing.Any: ...
+
+class ProductRepository_TypedMock:
+    @property
+    def typed_class(self) -> type[ProductRepository] | None: ...
+    @property
+    def find_all(self) -> MockedMethod[[int], typing.Any]: ...
+    @property
+    def find_by_id(self) -> MockedMethod[[str], typing.Any]: ...
+    @property
+    def search(self) -> MockedMethod[[str, int], typing.Any]: ...
+
+class ProductRepositoryMock(ProductRepository_TypedMock):
+    pass
+
+class User:
+    pass
+
+class User_TypedMock:
+    @property
+    def typed_class(self) -> type[User] | None: ...
+
+class UserMock(User_TypedMock):
+    pass
+
+class UserRepository:
+    def delete(self, user_id: int) -> typing.Any: ...
+    def find_all(self, limit: int = 10, offset: int = 0) -> typing.Any: ...
+    def find_by_id(self, user_id: int) -> typing.Any: ...
+    def save(self, user: tests.fixtures.sample_classes.User) -> typing.Any: ...
+
+class UserRepository_TypedMock:
+    @property
+    def typed_class(self) -> type[UserRepository] | None: ...
+    @property
+    def delete(self) -> MockedMethod[[int], typing.Any]: ...
+    @property
+    def find_all(self) -> MockedMethod[[int, int], typing.Any]: ...
+    @property
+    def find_by_id(self) -> MockedMethod[[int], typing.Any]: ...
+    @property
+    def save(self) -> MockedMethod[[User], typing.Any]: ...
+
+class UserRepositoryMock(UserRepository_TypedMock):
+    pass
+
+class UserService:
+    def async_create_user(self, name: str, email: str) -> typing.Any: ...
+    def async_get_user(self, user_id: int) -> typing.Any: ...
+    @property
+    def connection_status(self) -> typing.Any: ...
+    def create_user(self, name: str, email: str) -> typing.Any: ...
+    def delete_user(self, user_id: int) -> typing.Any: ...
+    @classmethod
+    def from_config(cls, config: dict[str, typing.Any]) -> typing.Any: ...
+    def get_user(self, user_id: int) -> typing.Any: ...
+    @property
+    def is_connected(self) -> typing.Any: ...
+    def update_user(self, user_id: int, *, name: str | None = None, email: str | None = None) -> typing.Any: ...
+    @staticmethod
+    def validate_email(email: str) -> typing.Any: ...
+
+class UserService_TypedMock:
+    @property
+    def typed_class(self) -> type[UserService] | None: ...
+    @property
+    def async_create_user(self) -> MockedMethod[[str, str], typing.Any]: ...
+    @property
+    def async_get_user(self) -> MockedMethod[[int], typing.Any]: ...
+    @property
+    def connection_status(self) -> typing.Any: ...
+    @property
+    def create_user(self) -> MockedMethod[[str, str], typing.Any]: ...
+    @property
+    def delete_user(self) -> MockedMethod[[int], typing.Any]: ...
+    @property
+    def from_config(self) -> MockedMethod[[dict], typing.Any]: ...
+    @property
+    def get_user(self) -> MockedMethod[[int], typing.Any]: ...
+    @property
+    def is_connected(self) -> typing.Any: ...
+    @property
+    def update_user(self) -> MockedMethod[[int, str | None, str | None], typing.Any]: ...
+    @property
+    def validate_email(self) -> MockedMethod[[str], typing.Any]: ...
+
+class UserServiceMock(UserService_TypedMock):
+    pass
+
+@typing.overload
+def typed_mock(cls: type[GenericService], *, spec_set: bool = ..., strict: bool = ...) -> GenericService_TypedMock: ...
+@typing.overload
+def typed_mock(cls: type[NestedService], *, spec_set: bool = ..., strict: bool = ...) -> NestedService_TypedMock: ...
+@typing.overload
+def typed_mock(cls: type[Product], *, spec_set: bool = ..., strict: bool = ...) -> Product_TypedMock: ...
+@typing.overload
+def typed_mock(cls: type[ProductRepository], *, spec_set: bool = ..., strict: bool = ...) -> ProductRepository_TypedMock: ...
+@typing.overload
+def typed_mock(cls: type[User], *, spec_set: bool = ..., strict: bool = ...) -> User_TypedMock: ...
+@typing.overload
+def typed_mock(cls: type[UserRepository], *, spec_set: bool = ..., strict: bool = ...) -> UserRepository_TypedMock: ...
+@typing.overload
+def typed_mock(cls: type[UserService], *, spec_set: bool = ..., strict: bool = ...) -> UserService_TypedMock: ...
+
+
+def typed_mock(cls: type, *, spec_set: bool = False, strict: bool = False):
+    """Create a typed mock with IDE auto-completion support.
+
+    Args:
+        cls: The class to mock
+        spec_set: If True, attempting to set non-existent attributes raises AttributeError
+        strict: Alias for spec_set
+
+    Returns:
+        A TypedMock instance with proper type hints for IDE auto-completion
+    """
+    from typed_pytest import TypedMock
+    if spec_set or strict:
+        return TypedMock(spec_set=cls)
+    return TypedMock(spec=cls)
+

@@ -80,6 +80,132 @@ def test_with_fixture(typed_mocker: TypedMocker):
     mock_service.get_user.assert_called_once_with(1)
 ```
 
+## Stub Generator
+
+`typed-pytest-generator` generates stub files for IDE auto-completion support. This allows your IDE to provide method signatures and type hints when using `typed_mock()`.
+
+### Basic Usage
+
+```bash
+# Generate stubs for your classes
+typed-pytest-generator -t myapp.services.UserService myapp.repos.ProductRepository
+
+# Specify custom output directory
+typed-pytest-generator -t myapp.services.UserService -o my_stubs
+
+# Include private methods (starting with _)
+typed-pytest-generator -t myapp.services.UserService --include-private
+
+# Verbose output
+typed-pytest-generator -t myapp.services.UserService -v
+```
+
+### Generated Files
+
+The generator creates the following structure:
+
+```
+typed_pytest_stubs/
+├── __init__.py      # Re-exports all stub classes
+└── _runtime.py      # Runtime class definitions with method signatures
+```
+
+### Using Generated Stubs
+
+```python
+# Import typed_mock from stubs package for full auto-completion
+from typed_pytest_stubs import typed_mock, UserService
+
+def test_user_service():
+    # typed_mock returns UserService_TypedMock with full IDE support
+    mock = typed_mock(UserService)
+
+    mock.get_user              # ✅ Auto-complete for method names
+    mock.get_user.return_value # ✅ Auto-complete for mock properties
+    mock.get_user.assert_called_once_with(1)  # ✅ Type-checked!
+
+    mock.get_user.return_value = {"id": 1, "name": "Test"}
+    result = mock.get_user(1)
+```
+
+### Configuration
+
+#### pyproject.toml Configuration
+
+You can configure `typed-pytest-generator` in your `pyproject.toml` file. This allows you to define targets, output directory, and other options without passing them via CLI every time.
+
+```toml
+[tool.typed-pytest-generator]
+# List of fully qualified class names to generate stubs for
+# Supports wildcard patterns: "module.*" matches all classes in the module
+targets = [
+    "myapp.services.*",                      # All classes in myapp.services
+    "myapp.repositories.ProductRepository",  # Specific class
+]
+
+# Output directory for generated stubs (default: "typed_pytest_stubs")
+output-dir = "typed_pytest_stubs"
+
+# Include private methods starting with _ (default: false)
+include-private = false
+
+# Exclude specific classes from stub generation
+exclude-targets = [
+    "myapp.internal.PrivateHelper",
+    "myapp.legacy.DeprecatedService",
+]
+```
+
+Once configured, simply run:
+
+```bash
+# Uses configuration from pyproject.toml (auto-discovered)
+typed-pytest-generator
+
+# With verbose output
+typed-pytest-generator -v
+```
+
+#### CLI Options
+
+CLI arguments take precedence over `pyproject.toml` configuration:
+
+```bash
+# Override targets from config
+typed-pytest-generator -t myapp.services.NewService
+
+# Override output directory
+typed-pytest-generator -o custom_stubs
+
+# Add exclusions (merged with config exclusions)
+typed-pytest-generator -e myapp.services.SkipThis
+
+# Use a specific config file
+typed-pytest-generator -c /path/to/pyproject.toml
+
+# Use wildcard to match all classes in a module
+typed-pytest-generator -t "myapp.services.*"
+
+# Combine options
+typed-pytest-generator -t "myapp.services.*" -e myapp.services.Internal -o stubs -v
+```
+
+#### IDE and Type Checker Setup
+
+Add `typed_pytest_stubs/` to your `.gitignore` since these files are generated:
+
+```gitignore
+# Generated stub files
+typed_pytest_stubs/
+```
+
+For pyright/pylance users, add the stubs directory to your `pyproject.toml`:
+
+```toml
+[tool.pyright]
+include = ["src", "tests", "typed_pytest_stubs"]
+```
+
 ## Development
 
 ```bash
