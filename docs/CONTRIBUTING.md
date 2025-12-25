@@ -1,128 +1,128 @@
 # Contributing Guide - typed-pytest
 
-## 1. 개발 환경 설정
+## 1. Development Environment Setup
 
-### 1.1 필수 요구사항
+### 1.1 Requirements
 
 - Python 3.13+
-- uv 패키지 매니저
+- uv package manager
 
-### 1.2 초기 설정
+### 1.2 Initial Setup
 
 ```bash
-# 저장소 클론
-git clone https://github.com/your-org/typed-pytest.git
+# Clone repository
+git clone https://github.com/tmdgusya/typed-pytest.git
 cd typed-pytest
 
-# 의존성 설치
+# Install dependencies
 uv sync --all-extras
 
-# pre-commit 훅 설치 (선택)
+# Install pre-commit hooks (optional)
 uv run pre-commit install
 ```
 
-### 1.3 개발 의존성
+### 1.3 Development Dependencies
 
 ```bash
-# 모든 개발 도구 설치
+# Install all development tools
 uv sync --extra dev
 ```
 
 ---
 
-## 2. 코드 스타일 컨벤션
+## 2. Code Style Conventions
 
-### 2.1 Python 스타일 가이드
+### 2.1 Python Style Guide
 
-**기본 원칙**: PEP 8 + Google Python Style Guide
+**Base Principles**: PEP 8 + Google Python Style Guide
 
-#### 포매팅
+#### Formatting
 
 ```bash
-# ruff로 자동 포매팅
+# Auto-format with ruff
 uv run ruff format src/ tests/
 
-# ruff로 린팅 체크
+# Lint check with ruff
 uv run ruff check src/ tests/
 ```
 
-#### 네이밍 컨벤션
+#### Naming Conventions
 
-| 항목 | 규칙 | 예시 |
-|------|------|------|
-| 클래스 | PascalCase | `TypedMock`, `MockedMethod` |
-| 함수/메소드 | snake_case | `typed_mock()`, `assert_called_once()` |
-| 상수 | UPPER_SNAKE_CASE | `DEFAULT_TIMEOUT` |
-| Private | 언더스코어 접두사 | `_internal_method()`, `_cache` |
-| TypeVar | 단일 대문자 또는 설명적 | `T`, `T_co`, `ReturnType` |
-| Protocol | 형용사/동사+able | `Callable`, `MockProtocol` |
+| Item | Rule | Example |
+|------|------|---------|
+| Class | PascalCase | `TypedMock`, `MockedMethod` |
+| Function/Method | snake_case | `typed_mock()`, `assert_called_once()` |
+| Constant | UPPER_SNAKE_CASE | `DEFAULT_TIMEOUT` |
+| Private | Underscore prefix | `_internal_method()`, `_cache` |
+| TypeVar | Single letter or descriptive | `T`, `T_co`, `ReturnType` |
+| Protocol | Adjective/Verb+able | `Callable`, `MockProtocol` |
 
-#### 임포트 순서
+#### Import Order
 
 ```python
-# 1. 표준 라이브러리
+# 1. Standard library
 from typing import TYPE_CHECKING, Generic, TypeVar
 from unittest.mock import MagicMock
 
-# 2. 서드파티
+# 2. Third-party
 import pytest
 from pytest_mock import MockerFixture
 
-# 3. 로컬
+# 3. Local
 from typed_pytest._mock import TypedMock
 from typed_pytest._protocols import MockProtocol
 
 if TYPE_CHECKING:
-    # 타입 체킹 전용 임포트
+    # Type checking only imports
     from typing import ParamSpec
 ```
 
-### 2.2 타입 힌트 컨벤션
+### 2.2 Type Hint Conventions
 
-#### 필수 타입 힌트
+#### Required Type Hints
 
-모든 공개 API는 **반드시** 타입 힌트를 포함해야 합니다:
+All public APIs **must** include type hints:
 
 ```python
 # Good
 def typed_mock(cls: type[T], /, **kwargs: Any) -> TypedMock[T]:
-    """타입 안전한 mock 객체를 생성합니다."""
+    """Creates a type-safe mock object."""
     ...
 
-# Bad - 타입 힌트 누락
+# Bad - missing type hints
 def typed_mock(cls, **kwargs):
     ...
 ```
 
-#### Generic 타입 표기
+#### Generic Type Notation
 
 ```python
-# Python 3.12+ 신규 문법 사용 권장
+# Python 3.12+ new syntax recommended
 class TypedMock[T](MagicMock):
     ...
 
-# 또는 전통적 방식 (하위 호환성 필요시)
+# Or traditional style (when backward compatibility needed)
 T = TypeVar('T')
 
 class TypedMock(MagicMock, Generic[T]):
     ...
 ```
 
-#### Union 타입
+#### Union Types
 
 ```python
-# Python 3.10+ 문법 사용
+# Python 3.10+ syntax
 def process(value: str | int | None) -> str:
     ...
 
-# X 연산자 사용 (Union 대신)
+# Use | operator (instead of Union)
 from collections.abc import Callable
 callback: Callable[[int], str] | None = None
 ```
 
-### 2.3 Docstring 컨벤션
+### 2.3 Docstring Conventions
 
-**Google Style Docstring** 사용:
+Use **Google Style Docstring**:
 
 ```python
 def typed_mock(
@@ -132,21 +132,21 @@ def typed_mock(
     spec_set: bool = False,
     **kwargs: Any,
 ) -> TypedMock[T]:
-    """타입 안전한 mock 객체를 생성합니다.
+    """Creates a type-safe mock object.
 
-    원본 클래스의 타입 정보를 유지하면서 Mock 기능을 제공하는
-    TypedMock 인스턴스를 반환합니다.
+    Returns a TypedMock instance that provides Mock functionality
+    while preserving the original class's type information.
 
     Args:
-        cls: Mock으로 만들 원본 클래스.
-        spec_set: True일 경우 spec에 없는 속성 접근 시 AttributeError 발생.
-        **kwargs: MagicMock에 전달할 추가 인자.
+        cls: The original class to mock.
+        spec_set: If True, raises AttributeError when accessing attributes not in spec.
+        **kwargs: Additional arguments to pass to MagicMock.
 
     Returns:
-        원본 클래스의 타입 정보를 가진 TypedMock 인스턴스.
+        A TypedMock instance with the original class's type information.
 
     Raises:
-        TypeError: cls가 클래스가 아닐 경우.
+        TypeError: If cls is not a class.
 
     Example:
         >>> mock_service = typed_mock(UserService)
@@ -158,37 +158,37 @@ def typed_mock(
 
 ---
 
-## 3. 테스트 컨벤션
+## 3. Testing Conventions
 
-### 3.1 테스트 구조
+### 3.1 Test Structure
 
 ```
 tests/
-├── conftest.py              # 공통 fixture
-├── unit/                    # 단위 테스트
+├── conftest.py              # Common fixtures
+├── unit/                    # Unit tests
 │   ├── test_typed_mock.py
 │   ├── test_mocked_method.py
 │   └── test_protocols.py
-├── integration/             # 통합 테스트
+├── integration/             # Integration tests
 │   ├── test_pytest_integration.py
 │   └── test_type_checker.py
-└── e2e/                     # E2E 테스트 (실제 사용 시나리오)
+└── e2e/                     # E2E tests (real-world scenarios)
     └── test_real_world.py
 ```
 
-### 3.2 테스트 네이밍
+### 3.2 Test Naming
 
 ```python
-# 패턴: test_<대상>_<조건>_<예상결과>
+# Pattern: test_<target>_<condition>_<expected_result>
 def test_typed_mock_with_class_returns_mock_with_spec():
     ...
 
 def test_mocked_method_assert_called_once_raises_when_not_called():
     ...
 
-# 클래스 기반 테스트
+# Class-based tests
 class TestTypedMock:
-    """TypedMock 클래스 테스트"""
+    """TypedMock class tests"""
 
     def test_creates_mock_with_original_type_hints(self):
         ...
@@ -197,9 +197,9 @@ class TestTypedMock:
         ...
 ```
 
-### 3.3 테스트 작성 규칙
+### 3.3 Test Writing Rules
 
-#### AAA 패턴 (Arrange-Act-Assert)
+#### AAA Pattern (Arrange-Act-Assert)
 
 ```python
 def test_typed_mock_return_value():
@@ -216,7 +216,7 @@ def test_typed_mock_return_value():
     mock_service.get_user.assert_called_once_with(1)
 ```
 
-#### Fixture 활용
+#### Using Fixtures
 
 ```python
 # conftest.py
@@ -225,7 +225,7 @@ from typed_pytest import TypedMock, typed_mock
 
 @pytest.fixture
 def mock_user_service() -> TypedMock[UserService]:
-    """UserService의 TypedMock 인스턴스"""
+    """TypedMock instance of UserService"""
     return typed_mock(UserService)
 
 # test_*.py
@@ -234,7 +234,7 @@ def test_with_fixture(mock_user_service: TypedMock[UserService]):
     ...
 ```
 
-#### 파라미터화 테스트
+#### Parameterized Tests
 
 ```python
 import pytest
@@ -257,53 +257,53 @@ def test_mocked_method_has_mock_attributes(method_name: str, expected_type: type
     assert isinstance(result, expected_type)
 ```
 
-### 3.4 커버리지 요구사항
+### 3.4 Coverage Requirements
 
-**최소 커버리지: 80%**
+**Minimum Coverage: 80%**
 
 ```bash
-# 커버리지 측정
+# Measure coverage
 uv run pytest --cov=src/typed_pytest --cov-report=term-missing --cov-report=html
 
-# 커버리지 실패 시 CI 실패
+# Fail CI if coverage is below threshold
 uv run pytest --cov=src/typed_pytest --cov-fail-under=80
 ```
 
-#### 커버리지 제외 항목
+#### Coverage Exclusions
 
 ```python
-# pragma: no cover 주석으로 제외 가능 (합리적 사유 필요)
+# Exclude with pragma: no cover comment (requires reasonable justification)
 if TYPE_CHECKING:  # pragma: no cover
     from typing import ParamSpec
 ```
 
 ---
 
-## 4. Git 워크플로우
+## 4. Git Workflow
 
-### 4.1 브랜치 전략
+### 4.1 Branch Strategy
 
 ```
-main                 # 안정 버전, 배포 대상
-├── develop          # 개발 통합 브랜치
-│   ├── feature/*    # 기능 개발
-│   ├── fix/*        # 버그 수정
-│   └── refactor/*   # 리팩토링
-└── release/*        # 릴리스 준비
+main                 # Stable version, deployment target
+├── develop          # Development integration branch
+│   ├── feature/*    # Feature development
+│   ├── fix/*        # Bug fixes
+│   └── refactor/*   # Refactoring
+└── release/*        # Release preparation
 ```
 
-### 4.2 브랜치 네이밍
+### 4.2 Branch Naming
 
 ```bash
-# 패턴: <type>/<task-id>-<short-description>
+# Pattern: <type>/<task-id>-<short-description>
 feature/T001-typed-mock-core
 fix/T003-assertion-type-hints
 refactor/T005-protocol-cleanup
 ```
 
-### 4.3 커밋 메시지
+### 4.3 Commit Messages
 
-**Conventional Commits** 사용:
+Use **Conventional Commits**:
 
 ```
 <type>(<scope>): <subject>
@@ -313,73 +313,73 @@ refactor/T005-protocol-cleanup
 <footer>
 ```
 
-#### Type 종류
+#### Type Categories
 
-| Type | 설명 |
-|------|------|
-| `feat` | 새로운 기능 |
-| `fix` | 버그 수정 |
-| `test` | 테스트 추가/수정 |
-| `docs` | 문서 변경 |
-| `refactor` | 리팩토링 |
-| `style` | 코드 스타일 (포매팅 등) |
-| `chore` | 빌드, 설정 변경 |
+| Type | Description |
+|------|-------------|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `test` | Add/modify tests |
+| `docs` | Documentation changes |
+| `refactor` | Refactoring |
+| `style` | Code style (formatting, etc.) |
+| `chore` | Build, configuration changes |
 
-#### 예시
+#### Examples
 
 ```bash
-feat(mock): TypedMock 제네릭 클래스 구현
+feat(mock): Implement TypedMock generic class
 
-- Generic[T] 기반 TypedMock 클래스 추가
-- MagicMock 상속으로 기존 mock 기능 유지
-- __class_getitem__ 오버라이드로 런타임 타입 정보 저장
+- Add Generic[T] based TypedMock class
+- Inherit from MagicMock to maintain existing mock functionality
+- Override __class_getitem__ to store runtime type information
 
 Closes #12
 
 ---
 
-test(mock): TypedMock 단위 테스트 추가
+test(mock): Add TypedMock unit tests
 
-- 기본 생성 테스트
-- spec 파라미터 테스트
-- 타입 힌트 검증 테스트
+- Basic creation tests
+- spec parameter tests
+- Type hint validation tests
 
 Coverage: 85%
 ```
 
-### 4.4 Pull Request 규칙
+### 4.4 Pull Request Rules
 
-#### PR 템플릿
+#### PR Template
 
 ```markdown
-## 변경 사항
-- [ ] 기능 구현 완료
-- [ ] 테스트 추가 (커버리지 80% 이상)
-- [ ] 타입 체크 통과 (mypy, pyright)
-- [ ] 문서 업데이트
+## Changes
+- [ ] Feature implementation complete
+- [ ] Tests added (coverage 80%+)
+- [ ] Type checks pass (mypy, pyright)
+- [ ] Documentation updated
 
-## 관련 Task
+## Related Task
 - Closes #<task-number>
 
-## 테스트 방법
+## How to Test
 1. `uv run pytest tests/unit/test_xxx.py`
-2. 예상 결과: ...
+2. Expected result: ...
 
-## 스크린샷 (해당시)
+## Screenshots (if applicable)
 ```
 
-#### 리뷰 체크리스트
+#### Review Checklist
 
-- [ ] 타입 힌트가 올바른가?
-- [ ] 테스트가 충분한가?
-- [ ] Docstring이 작성되었는가?
-- [ ] Breaking change가 있는가?
+- [ ] Are type hints correct?
+- [ ] Are tests sufficient?
+- [ ] Is docstring written?
+- [ ] Are there breaking changes?
 
 ---
 
-## 5. 개발-테스트 회귀 사이클
+## 5. Development-Test Regression Cycle
 
-### 5.1 TDD 워크플로우
+### 5.1 TDD Workflow
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -395,43 +395,43 @@ Coverage: 85%
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 5.2 각 Task의 개발 순서
+### 5.2 Development Order for Each Task
 
-1. **테스트 먼저 작성** (RED)
+1. **Write tests first** (RED)
    ```bash
-   # 실패하는 테스트 작성
+   # Write failing test
    uv run pytest tests/unit/test_new_feature.py -v
    # Expected: FAILED
    ```
 
-2. **구현** (GREEN)
+2. **Implement** (GREEN)
    ```bash
-   # 테스트 통과하는 최소 코드 작성
+   # Write minimal code to pass tests
    uv run pytest tests/unit/test_new_feature.py -v
    # Expected: PASSED
    ```
 
-3. **리팩토링** (REFACTOR)
+3. **Refactor** (REFACTOR)
    ```bash
-   # 코드 정리 후 테스트 재실행
+   # Clean up code and re-run tests
    uv run pytest tests/unit/test_new_feature.py -v
    # Expected: PASSED
    ```
 
-4. **전체 검증**
+4. **Full Validation**
    ```bash
-   # 타입 체크
+   # Type check
    uv run mypy src/
    uv run pyright src/
 
-   # 전체 테스트 + 커버리지
+   # Full tests + coverage
    uv run pytest --cov=src/typed_pytest --cov-fail-under=80
 
-   # 린트
+   # Lint
    uv run ruff check src/ tests/
    ```
 
-### 5.3 CI/CD 파이프라인
+### 5.3 CI/CD Pipeline
 
 ```yaml
 # .github/workflows/ci.yml
@@ -473,20 +473,20 @@ jobs:
 
 ---
 
-## 6. 릴리스 프로세스
+## 6. Release Process
 
-### 6.1 버전 규칙
+### 6.1 Versioning Rules
 
-**Semantic Versioning (SemVer)** 사용:
+Use **Semantic Versioning (SemVer)**:
 
 ```
 MAJOR.MINOR.PATCH
-  │     │     └── 버그 수정 (하위 호환)
-  │     └──────── 기능 추가 (하위 호환)
+  │     │     └── Bug fixes (backward compatible)
+  │     └──────── New features (backward compatible)
   └────────────── Breaking changes
 ```
 
-### 6.2 Changelog 작성
+### 6.2 Changelog Format
 
 ```markdown
 # Changelog
@@ -494,25 +494,25 @@ MAJOR.MINOR.PATCH
 ## [0.2.0] - 2024-12-XX
 
 ### Added
-- TypedMocker pytest fixture 추가
-- AsyncMock 지원
+- TypedMocker pytest fixture
+- AsyncMock support
 
 ### Changed
-- MockedMethod 시그니처 개선
+- Improved MockedMethod signature
 
 ### Fixed
-- 중첩 mock 타입 추론 오류 수정
+- Fixed nested mock type inference error
 ```
 
 ---
 
-## 7. 문의 및 도움
+## 7. Questions and Help
 
-- **Issue**: GitHub Issues 사용
+- **Issues**: Use GitHub Issues
 - **Discussion**: GitHub Discussions
-- **Code Review**: PR 코멘트
+- **Code Review**: PR comments
 
 ---
 
-*문서 버전: 1.0*
-*최종 수정: 2024-12*
+*Document Version: 1.0*
+*Last Updated: 2024-12*

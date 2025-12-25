@@ -1,10 +1,10 @@
-# Typed-Pytest 기술 스펙 문서
+# Typed-Pytest Technical Specification
 
-## 1. 개요
+## 1. Overview
 
-### 1.1 문제 정의
+### 1.1 Problem Definition
 
-pytest와 unittest.mock을 사용할 때 다음과 같은 타입 추론 문제가 발생합니다:
+When using pytest and unittest.mock, the following type inference issues occur:
 
 ```python
 from unittest.mock import MagicMock, patch
@@ -17,67 +17,67 @@ class UserService:
     def create_user(self, name: str) -> dict:
         return {"id": 1, "name": name}
 
-# 문제 1: fixture로 mocking 시 타입 추론 불가
+# Problem 1: No type inference when mocking via fixture
 @pytest.fixture
 def mock_user_service(mocker: MockerFixture) -> MagicMock:
     return mocker.patch("app.UserService")
 
-def test_user(mock_user_service):  # mock_user_service의 타입이 MagicMock
-    mock_user_service.get_user(1)  # get_user에 대한 자동완성/타입 힌트 없음
+def test_user(mock_user_service):  # mock_user_service type is MagicMock
+    mock_user_service.get_user(1)  # No autocomplete/type hints for get_user
 
-# 문제 2: cast 사용 시 mock 메소드 타입 힌트 누락
+# Problem 2: Missing mock method type hints when using cast
 def test_user_with_cast(mock_user_service):
     service = cast(UserService, mock_user_service)
-    service.get_user.assert_called_once()  # ❌ assert_called_once는 타입 힌트 없음
-    # UserService.get_user에는 assert_called_once가 없기 때문
+    service.get_user.assert_called_once()  # ❌ assert_called_once has no type hints
+    # Because UserService.get_user doesn't have assert_called_once
 
-# 문제 3: Mock으로 cast하면 원본 메소드 타입 힌트 누락
+# Problem 3: Missing original method type hints when casting to Mock
 def test_user_with_mock_cast(mock_user_service):
     service = cast(MagicMock, mock_user_service)
-    service.get_user(1)  # ❌ get_user 파라미터 타입 힌트 없음
+    service.get_user(1)  # ❌ No parameter type hints for get_user
 ```
 
-### 1.2 목표
+### 1.2 Goals
 
-Java Mockito처럼 **원본 클래스의 타입 지원**과 **Mock 메소드의 타입 추론**을 동시에 가능하게 하는 라이브러리 개발:
+Develop a library that enables both **original class type support** and **Mock method type inference** like Java Mockito:
 
 ```python
-# 목표하는 사용자 경험
+# Target user experience
 from typed_pytest import TypedMock
 
 def test_user(mocker: MockerFixture):
-    # 원본 타입 + Mock 타입 동시 지원
+    # Support both original type + Mock type simultaneously
     mock_service: TypedMock[UserService] = typed_mock(UserService)
 
-    mock_service.get_user(1)  # ✅ 원본 메소드 시그니처 자동완성
-    mock_service.get_user.assert_called_once_with(1)  # ✅ Mock 메소드도 타입 힌트 지원
-    mock_service.get_user.return_value = {"id": 1}  # ✅ return_value 타입 힌트
+    mock_service.get_user(1)  # ✅ Original method signature autocomplete
+    mock_service.get_user.assert_called_once_with(1)  # ✅ Mock methods with type hints
+    mock_service.get_user.return_value = {"id": 1}  # ✅ return_value type hints
 ```
 
 ---
 
-## 2. 기술적 배경
+## 2. Technical Background
 
-### 2.1 Python 타입 시스템 현황
+### 2.1 Current State of Python Type System
 
-#### 현재 문제점
+#### Current Issues
 
-| 접근 방식 | 원본 타입 지원 | Mock 메소드 지원 | 단점 |
-|-----------|---------------|-----------------|------|
-| `MagicMock` | ❌ | ✅ | 원본 클래스 메소드 추론 불가 |
-| `cast(OriginalClass, mock)` | ✅ | ❌ | Mock 메소드 추론 불가 |
-| `create_autospec()` | 부분적 | ❌ | 런타임만 지원, 정적 분석 미지원 |
+| Approach | Original Type Support | Mock Method Support | Drawback |
+|----------|----------------------|---------------------|----------|
+| `MagicMock` | ❌ | ✅ | Cannot infer original class methods |
+| `cast(OriginalClass, mock)` | ✅ | ❌ | Cannot infer Mock methods |
+| `create_autospec()` | Partial | ❌ | Runtime only, no static analysis support |
 
-#### Python 3.13 새로운 기능
+#### Python 3.13 New Features
 
-- **PEP 696**: TypeVar, ParamSpec, TypeVarTuple에 기본값 지원
-- **PEP 705**: `typing.ReadOnly` - TypedDict 읽기 전용 필드
-- **PEP 742**: `typing.TypeIs` - 더 직관적인 타입 좁히기
-- **PEP 702**: `warnings.deprecated()` 데코레이터
+- **PEP 696**: Default values for TypeVar, ParamSpec, TypeVarTuple
+- **PEP 705**: `typing.ReadOnly` - TypedDict read-only fields
+- **PEP 742**: `typing.TypeIs` - More intuitive type narrowing
+- **PEP 702**: `warnings.deprecated()` decorator
 
-### 2.2 핵심 Python API
+### 2.2 Core Python APIs
 
-#### 2.2.1 Generic과 TypeVar
+#### 2.2.1 Generic and TypeVar
 
 ```python
 from typing import TypeVar, Generic
@@ -85,7 +85,7 @@ from typing import TypeVar, Generic
 T = TypeVar('T')
 
 class TypedMock(Generic[T]):
-    """T 타입의 인터페이스를 Mock으로 감싸는 제네릭 클래스"""
+    """Generic class that wraps type T's interface as Mock"""
     pass
 ```
 
@@ -96,7 +96,7 @@ from typing import Protocol, runtime_checkable
 
 @runtime_checkable
 class MockProtocol(Protocol):
-    """Mock 객체가 가져야 할 메소드 정의"""
+    """Defines methods that Mock objects should have"""
     def assert_called(self) -> None: ...
     def assert_called_once(self) -> None: ...
     def assert_called_with(self, *args, **kwargs) -> None: ...
@@ -107,7 +107,7 @@ class MockProtocol(Protocol):
     def call_count(self) -> int: ...
 ```
 
-#### 2.2.3 @overload 데코레이터
+#### 2.2.3 @overload Decorator
 
 ```python
 from typing import overload, Callable
@@ -120,7 +120,7 @@ class TypedMocker:
     def patch(self, target: str) -> MagicMock: ...
 
     def patch(self, target):
-        # 실제 구현
+        # Actual implementation
         pass
 ```
 
@@ -129,8 +129,8 @@ class TypedMocker:
 ```python
 class TypedMock:
     def __class_getitem__(cls, item: type[T]) -> type["TypedMock[T]"]:
-        """TypedMock[UserService] 문법 지원"""
-        # 런타임에서 제네릭 타입 정보 접근
+        """Support TypedMock[UserService] syntax"""
+        # Access generic type info at runtime
         return super().__class_getitem__(item)
 ```
 
@@ -143,16 +143,16 @@ P = ParamSpec('P')
 R = TypeVar('R')
 
 class MockedMethod(Generic[P, R]):
-    """원본 메소드의 시그니처를 보존하는 Mock 메소드"""
+    """Mock method that preserves original method's signature"""
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R: ...
     def assert_called_once_with(self, *args: P.args, **kwargs: P.kwargs) -> None: ...
 ```
 
 ---
 
-## 3. 설계 방안
+## 3. Design Approach
 
-### 3.1 핵심 아키텍처
+### 3.1 Core Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -162,24 +162,25 @@ class MockedMethod(Generic[P, R]):
 │  │   TypedMock[T]   │    │  MockedMethod    │                  │
 │  │  (Generic[T])    │◄───│  [P, R]          │                  │
 │  │                  │    │                  │                  │
-│  │ - 원본 T의 모든  │    │ - 원본 시그니처  │                  │
-│  │   메소드 시그니처│    │   P 보존         │                  │
-│  │ - Mock 프로토콜  │    │ - Mock 메소드    │                  │
-│  │   메소드         │    │   타입 힌트      │                  │
+│  │ - All method     │    │ - Preserves      │                  │
+│  │   signatures     │    │   original sig P │                  │
+│  │   from T         │    │ - Mock method    │                  │
+│  │ - Mock protocol  │    │   type hints     │                  │
+│  │   methods        │    │                  │                  │
 │  └──────────────────┘    └──────────────────┘                  │
 │                                                                 │
 │  ┌──────────────────┐    ┌──────────────────┐                  │
 │  │  typed_mock()    │    │  TypedMocker     │                  │
-│  │  Factory 함수    │    │  (pytest 통합)   │                  │
+│  │  Factory func    │    │  (pytest integ)  │                  │
 │  └──────────────────┘    └──────────────────┘                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 3.2 구현 전략
+### 3.2 Implementation Strategies
 
-#### 전략 A: Protocol Intersection 접근법
+#### Strategy A: Protocol Intersection Approach
 
-Python에는 공식적인 Intersection 타입이 없으므로, 다중 상속을 활용한 Protocol 조합:
+Python doesn't have official Intersection types, so combine Protocols using multiple inheritance:
 
 ```python
 from typing import Protocol, Generic, TypeVar
@@ -187,25 +188,25 @@ from typing import Protocol, Generic, TypeVar
 T = TypeVar('T')
 
 class MockMethods(Protocol):
-    """Mock 고유 메소드"""
+    """Mock-specific methods"""
     def assert_called(self) -> None: ...
     def assert_called_once(self) -> None: ...
     # ...
 
-# 문제: T의 메소드와 MockMethods를 동적으로 결합하기 어려움
+# Problem: Difficult to dynamically combine T's methods with MockMethods
 ```
 
-#### 전략 B: 타입 스텁(.pyi) 생성 접근법
+#### Strategy B: Type Stub (.pyi) Generation Approach
 
-빌드 타임에 원본 클래스를 분석하여 타입 스텁 자동 생성:
+Analyze original classes at build time and auto-generate type stubs:
 
 ```python
-# 자동 생성되는 user_service.pyi
+# Auto-generated user_service.pyi
 class MockedUserService(UserService, MockProtocol):
     def get_user(self, user_id: int) -> MockedMethod[..., dict]: ...
 ```
 
-#### 전략 C: Generic + @overload 조합 (권장)
+#### Strategy C: Generic + @overload Combination (Recommended)
 
 ```python
 from typing import Generic, TypeVar, overload, TYPE_CHECKING
@@ -215,14 +216,15 @@ T = TypeVar('T')
 
 class TypedMock(MagicMock, Generic[T]):
     """
-    원본 타입 T의 인터페이스를 유지하면서 Mock 기능을 제공하는 클래스
+    Class that provides Mock functionality while maintaining
+    the interface of original type T
 
-    타입 체커는 T의 모든 메소드를 인식하고,
-    각 메소드는 MockedMethod로 래핑되어 assert_* 메소드 접근 가능
+    Type checker recognizes all methods of T,
+    each method is wrapped as MockedMethod for assert_* method access
     """
 
     if TYPE_CHECKING:
-        # 타입 체커만 이 정의를 봄
+        # Only type checker sees this definition
         def __getattr__(self, name: str) -> MockedMethod: ...
 
 @overload
@@ -232,11 +234,11 @@ def typed_mock(cls: type[T], /) -> TypedMock[T]: ...
 def typed_mock(cls: type[T], /, **kwargs) -> TypedMock[T]: ...
 
 def typed_mock(cls, /, **kwargs):
-    """타입 안전한 Mock 객체 생성"""
+    """Create type-safe Mock object"""
     return TypedMock(spec=cls, **kwargs)
 ```
 
-### 3.3 MockedMethod 설계
+### 3.3 MockedMethod Design
 
 ```python
 from typing import Generic, ParamSpec, TypeVar, Callable
@@ -246,16 +248,16 @@ R = TypeVar('R')
 
 class MockedMethod(Generic[P, R]):
     """
-    원본 메소드의 시그니처를 보존하면서 Mock 기능을 제공
+    Provides Mock functionality while preserving original method's signature
 
-    예: UserService.get_user(user_id: int) -> dict
+    Example: UserService.get_user(user_id: int) -> dict
     → MockedMethod[[int], dict]
     """
 
-    # 원본 메소드처럼 호출 가능
+    # Callable like original method
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R: ...
 
-    # Mock assertion 메소드들
+    # Mock assertion methods
     def assert_called(self) -> None: ...
     def assert_called_once(self) -> None: ...
     def assert_called_with(self, *args: P.args, **kwargs: P.kwargs) -> None: ...
@@ -263,7 +265,7 @@ class MockedMethod(Generic[P, R]):
     def assert_any_call(self, *args: P.args, **kwargs: P.kwargs) -> None: ...
     def assert_not_called(self) -> None: ...
 
-    # Mock 속성들
+    # Mock properties
     @property
     def return_value(self) -> R: ...
     @return_value.setter
@@ -286,7 +288,7 @@ class MockedMethod(Generic[P, R]):
 
 ---
 
-## 4. pytest 통합
+## 4. pytest Integration
 
 ### 4.1 TypedMocker Fixture
 
@@ -298,7 +300,7 @@ import pytest
 T = TypeVar('T')
 
 class TypedMocker:
-    """pytest-mock의 MockerFixture를 확장한 타입 안전 모커"""
+    """Type-safe mocker extending pytest-mock's MockerFixture"""
 
     def __init__(self, mocker: MockerFixture):
         self._mocker = mocker
@@ -314,26 +316,26 @@ class TypedMocker:
     ) -> TypedMock[T]: ...
 
     def patch(self, target, new=None, **kwargs):
-        """타입 안전한 patch"""
+        """Type-safe patch"""
         if new is not None:
             mock = TypedMock(spec=new)
             return self._mocker.patch(target, mock, **kwargs)
         return self._mocker.patch(target, **kwargs)
 
     def create_autospec(self, cls: type[T]) -> TypedMock[T]:
-        """타입 안전한 autospec 생성"""
+        """Type-safe autospec creation"""
         from unittest.mock import create_autospec
         mock = create_autospec(cls, instance=True)
-        # TypedMock으로 래핑
+        # Wrap with TypedMock
         return TypedMock(spec=cls, wraps=mock)
 
 @pytest.fixture
 def typed_mocker(mocker: MockerFixture) -> TypedMocker:
-    """타입 안전한 mocker fixture"""
+    """Type-safe mocker fixture"""
     return TypedMocker(mocker)
 ```
 
-### 4.2 사용 예시
+### 4.2 Usage Examples
 
 ```python
 # tests/test_user_service.py
@@ -341,22 +343,22 @@ from typed_pytest import TypedMock, typed_mocker, TypedMocker
 from app.services import UserService
 
 def test_get_user(typed_mocker: TypedMocker):
-    # 방법 1: 직접 mock 생성
+    # Method 1: Create mock directly
     mock_service: TypedMock[UserService] = typed_mocker.mock(UserService)
 
-    # 원본 타입의 메소드 시그니처 지원 ✅
+    # Original type method signature support ✅
     mock_service.get_user.return_value = {"id": 1, "name": "John"}
 
-    # Mock 메소드 타입 힌트 지원 ✅
+    # Mock method type hints support ✅
     mock_service.get_user(1)
-    mock_service.get_user.assert_called_once_with(1)  # 파라미터 타입 체크됨
+    mock_service.get_user.assert_called_once_with(1)  # Parameter types checked
 
 def test_with_patch(typed_mocker: TypedMocker):
-    # 방법 2: patch 사용
+    # Method 2: Using patch
     with typed_mocker.patch("app.services.UserService", UserService) as mock_service:
         mock_service.create_user.return_value = {"id": 1, "name": "Test"}
 
-        # 테스트 로직
+        # Test logic
         result = some_function_using_user_service()
 
         mock_service.create_user.assert_called_once_with("Test")
@@ -364,16 +366,16 @@ def test_with_patch(typed_mocker: TypedMocker):
 
 ---
 
-## 5. 기술적 도전과 해결책
+## 5. Technical Challenges and Solutions
 
-### 5.1 동적 메소드 속성 타입 추론
+### 5.1 Dynamic Method Attribute Type Inference
 
-**문제**: `mock_service.get_user`가 `MockedMethod`임을 타입 체커에게 알려야 함
+**Problem**: Need to tell type checker that `mock_service.get_user` is `MockedMethod`
 
-**해결책**: `__getattr__` 타입 힌트 + 타입 스텁
+**Solution**: `__getattr__` type hints + type stubs
 
 ```python
-# typed_pytest.pyi (타입 스텁)
+# typed_pytest.pyi (type stub)
 from typing import Generic, TypeVar, overload
 
 T = TypeVar('T')
@@ -382,40 +384,40 @@ class TypedMock(Generic[T]):
     @overload
     def __getattr__(self, name: str) -> MockedMethod: ...
 
-    # 또는 더 정교하게:
-    # T의 각 메소드에 대해 동적으로 MockedMethod 타입 반환
+    # Or more precisely:
+    # Dynamically return MockedMethod type for each method of T
 ```
 
-### 5.2 원본 클래스 메소드 시그니처 보존
+### 5.2 Preserving Original Class Method Signatures
 
-**문제**: `TypedMock[UserService]`가 `UserService`의 모든 메소드를 알아야 함
+**Problem**: `TypedMock[UserService]` needs to know all methods of `UserService`
 
-**해결책**:
-1. **TYPE_CHECKING 분기**: 타입 체커에게만 보이는 정의
-2. **Plugin 접근법**: mypy/pyright 플러그인으로 타입 정보 주입
+**Solutions**:
+1. **TYPE_CHECKING branch**: Definitions visible only to type checker
+2. **Plugin approach**: Inject type info via mypy/pyright plugin
 
 ```python
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import _SpecialForm
-    # 타입 체커 전용 정의
+    # Type checker only definition
     class TypedMock(Generic[T]):
-        # T의 모든 어트리뷰트를 MockedMethod로 변환
+        # Transform all attributes of T to MockedMethod
         pass
 else:
-    # 런타임 정의
+    # Runtime definition
     class TypedMock(MagicMock):
         pass
 ```
 
-### 5.3 Intersection 타입 부재
+### 5.3 Lack of Intersection Type
 
-**문제**: Python에는 공식 Intersection 타입이 없음
+**Problem**: Python has no official Intersection type
 
-**해결책 옵션**:
+**Solution Options**:
 
-1. **typing-protocol-intersection 라이브러리 사용**
+1. **Use typing-protocol-intersection library**
    ```python
    from typing_protocol_intersection import ProtocolIntersection as Has
 
@@ -423,37 +425,37 @@ else:
        ...
    ```
 
-2. **다중 상속 Protocol 정의**
+2. **Multiple inheritance Protocol definition**
    ```python
    class TypedMock(Generic[T], MockProtocol):
-       """T와 MockProtocol을 모두 구현"""
+       """Implements both T and MockProtocol"""
        pass
    ```
 
-3. **타입 스텁에서 Union 활용** (부분적 해결)
+3. **Use Union in type stubs** (partial solution)
 
 ---
 
-## 6. 의존성 및 호환성
+## 6. Dependencies and Compatibility
 
-### 6.1 필수 의존성
+### 6.1 Required Dependencies
 
-| 패키지 | 버전 | 용도 |
-|--------|------|------|
-| Python | ≥3.13 | 기본 언어, 최신 typing 기능 활용 |
-| pytest | ≥8.0 | 테스트 프레임워크 |
-| pytest-mock | ≥3.11 | MockerFixture 기반 |
+| Package | Version | Purpose |
+|---------|---------|---------|
+| Python | ≥3.13 | Base language, latest typing features |
+| pytest | ≥8.0 | Test framework |
+| pytest-mock | ≥3.11 | MockerFixture base |
 
-### 6.2 선택적 의존성
+### 6.2 Optional Dependencies
 
-| 패키지 | 용도 |
-|--------|------|
-| typing-extensions | 하위 버전 호환성 (필요시) |
-| typing-protocol-intersection | Intersection 타입 지원 |
-| mypy | 타입 체킹 |
-| pyright | 타입 체킹 (VS Code Pylance) |
+| Package | Purpose |
+|---------|---------|
+| typing-extensions | Backward compatibility (if needed) |
+| typing-protocol-intersection | Intersection type support |
+| mypy | Type checking |
+| pyright | Type checking (VS Code Pylance) |
 
-### 6.3 개발 의존성
+### 6.3 Development Dependencies
 
 ```toml
 [project.optional-dependencies]
@@ -468,83 +470,83 @@ dev = [
 
 ---
 
-## 7. 프로젝트 구조
+## 7. Project Structure
 
 ```
 typed-pytest/
 ├── src/
 │   └── typed_pytest/
-│       ├── __init__.py          # 공개 API
-│       ├── _mock.py             # TypedMock 구현
-│       ├── _method.py           # MockedMethod 구현
-│       ├── _mocker.py           # TypedMocker (pytest 통합)
-│       ├── _protocols.py        # Protocol 정의
-│       ├── py.typed             # PEP 561 마커
-│       └── _version.py          # 버전 정보
+│       ├── __init__.py          # Public API
+│       ├── _mock.py             # TypedMock implementation
+│       ├── _method.py           # MockedMethod implementation
+│       ├── _mocker.py           # TypedMocker (pytest integration)
+│       ├── _protocols.py        # Protocol definitions
+│       ├── py.typed             # PEP 561 marker
+│       └── _version.py          # Version info
 ├── stubs/
 │   └── typed_pytest/
-│       └── __init__.pyi         # 타입 스텁 (필요시)
+│       └── __init__.pyi         # Type stubs (if needed)
 ├── tests/
 │   ├── test_typed_mock.py
 │   ├── test_mocked_method.py
 │   └── test_integration.py
 ├── docs/
-│   ├── TECH_SPEC.md             # 이 문서
-│   └── REFERENCES.md            # 참고 자료
+│   ├── TECH_SPEC.md             # This document
+│   └── CONTRIBUTING.md          # Contribution guide
 ├── pyproject.toml
 └── README.md
 ```
 
 ---
 
-## 8. 구현 로드맵
+## 8. Implementation Roadmap
 
-### Phase 1: 핵심 기능
-- [ ] `TypedMock[T]` 제네릭 클래스 구현
-- [ ] `MockedMethod[P, R]` 구현
-- [ ] 기본 팩토리 함수 `typed_mock()` 구현
-- [ ] 단위 테스트 작성
+### Phase 1: Core Features
+- [x] `TypedMock[T]` generic class implementation
+- [x] `MockedMethod[P, R]` implementation
+- [x] Basic factory function `typed_mock()` implementation
+- [x] Unit tests
 
-### Phase 2: pytest 통합
-- [ ] `TypedMocker` 클래스 구현
-- [ ] `typed_mocker` fixture 구현
-- [ ] `patch()` 메소드 타입 안전 버전 구현
-- [ ] 통합 테스트 작성
+### Phase 2: pytest Integration
+- [x] `TypedMocker` class implementation
+- [x] `typed_mocker` fixture implementation
+- [x] Type-safe `patch()` method implementation
+- [x] Integration tests
 
-### Phase 3: 타입 체커 지원
-- [ ] mypy 호환성 검증
-- [ ] pyright 호환성 검증
-- [ ] 필요시 타입 스텁 작성
-- [ ] 필요시 mypy 플러그인 개발
+### Phase 3: Type Checker Support
+- [x] mypy compatibility verification
+- [x] pyright compatibility verification
+- [x] Type stubs (if needed)
+- [ ] mypy plugin development (if needed)
 
-### Phase 4: 고급 기능
-- [ ] Nested mock 지원
-- [ ] Async 메소드 지원
-- [ ] Property mock 지원
-- [ ] Class method / Static method 지원
-
----
-
-## 9. 위험 요소 및 대안
-
-### 9.1 위험 요소
-
-| 위험 | 영향도 | 대응 방안 |
-|------|--------|-----------|
-| 타입 체커 간 동작 차이 | 높음 | mypy/pyright 모두 테스트 |
-| Python 버전별 typing 차이 | 중간 | 3.13+ 전용으로 범위 제한 |
-| 복잡한 제네릭 타입 지원 한계 | 중간 | 문서화 및 제한 명시 |
-| 성능 오버헤드 | 낮음 | 타입 힌트는 런타임 영향 없음 |
-
-### 9.2 대안 검토
-
-1. **mypy 플러그인만 개발**: 런타임 변경 없이 타입 체커 레벨에서만 해결
-2. **IDE 확장 개발**: VS Code/PyCharm 전용 확장
-3. **코드 생성기**: 원본 클래스에서 Mock 타입 스텁 자동 생성
+### Phase 4: Advanced Features
+- [x] Nested mock support
+- [x] Async method support
+- [x] Property mock support
+- [x] Class method / Static method support
 
 ---
 
-## 10. 참고 자료
+## 9. Risk Factors and Alternatives
+
+### 9.1 Risk Factors
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Behavior differences between type checkers | High | Test both mypy/pyright |
+| Python version typing differences | Medium | Limit scope to 3.13+ |
+| Complex generic type support limitations | Medium | Document limitations |
+| Performance overhead | Low | Type hints have no runtime impact |
+
+### 9.2 Alternative Approaches
+
+1. **Develop mypy plugin only**: Solve at type checker level without runtime changes
+2. **IDE extension development**: VS Code/PyCharm specific extension
+3. **Code generator**: Auto-generate Mock type stubs from original classes
+
+---
+
+## 10. References
 
 - [PEP 544 - Protocols: Structural subtyping](https://peps.python.org/pep-0544/)
 - [PEP 560 - Core support for typing module and generic types](https://peps.python.org/pep-0560/)
@@ -557,5 +559,5 @@ typed-pytest/
 
 ---
 
-*문서 버전: 1.0*
-*최종 수정: 2024-12*
+*Document Version: 1.0*
+*Last Updated: 2024-12*
