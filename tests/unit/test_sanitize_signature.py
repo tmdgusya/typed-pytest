@@ -41,6 +41,54 @@ class TestSanitizeSignature:
         result = _sanitize_signature(sig)
         assert result == "(self, a: str = 'hello', b = ..., c: int = 42)"
 
+    def test_sanitize_undefined_identifier(self) -> None:
+        """Should replace undefined identifiers like PydanticUndefined."""
+        sig = "(self, encoder = PydanticUndefined, models_as_dict = PydanticUndefined)"
+        result = _sanitize_signature(sig)
+        assert result == "(self, encoder = ..., models_as_dict = ...)"
+
+    def test_sanitize_camelcase_identifier(self) -> None:
+        """Should replace CamelCase identifiers that are likely undefined."""
+        sig = "(cls, schema_generator: type = GenerateJsonSchema)"
+        result = _sanitize_signature(sig)
+        assert result == "(cls, schema_generator: type = ...)"
+
+    def test_sanitize_preserves_none_default(self) -> None:
+        """Should preserve None as a default value."""
+        sig = "(self, value: str | None = None)"
+        result = _sanitize_signature(sig)
+        assert result == "(self, value: str | None = None)"
+
+    def test_sanitize_preserves_empty_collections(self) -> None:
+        """Should preserve empty collections as defaults."""
+        sig = "(self, items: list = [], data: dict = {})"
+        result = _sanitize_signature(sig)
+        assert result == "(self, items: list = [], data: dict = {})"
+
+    def test_sanitize_preserves_negative_numbers(self) -> None:
+        """Should preserve negative numbers."""
+        sig = "(self, offset: int = -1, factor: float = -0.5)"
+        result = _sanitize_signature(sig)
+        assert result == "(self, offset: int = -1, factor: float = -0.5)"
+
+    def test_sanitize_pydantic_json_method(self) -> None:
+        """Should handle Pydantic's json method with PydanticUndefined defaults."""
+        sig = (
+            "(self, *, include: 'IncEx | None' = None, exclude: 'IncEx | None' = None, "
+            "by_alias: 'bool' = False, exclude_unset: 'bool' = False, "
+            "exclude_defaults: 'bool' = False, exclude_none: 'bool' = False, "
+            "encoder: 'Callable[[Any], Any] | None' = PydanticUndefined, "
+            "models_as_dict: 'bool' = PydanticUndefined, **dumps_kwargs: 'Any')"
+        )
+        result = _sanitize_signature(sig)
+        # PydanticUndefined should be replaced with ...
+        assert "PydanticUndefined" not in result
+        assert "encoder: 'Callable[[Any], Any] | None' = ..." in result
+        assert "models_as_dict: 'bool' = ..." in result
+        # Valid defaults should be preserved
+        assert "= None" in result
+        assert "= False" in result
+
 
 class ClassWithClassDefault:
     """Test class with a class as default parameter value."""
