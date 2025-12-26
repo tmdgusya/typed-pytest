@@ -47,6 +47,9 @@ jobs:
           # pyrefly only checks typed_pytest (generator has LiteralString false positives)
           - checker: pyrefly
             command: pyrefly check src/typed_pytest/
+          # ty (Astral's type checker) - only checks typed_pytest for now
+          - checker: ty
+            command: ty check src/typed_pytest/
     steps:
       - uses: actions/checkout@v4
 
