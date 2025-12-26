@@ -247,6 +247,35 @@ For pyright/pylance users, add the stubs directory to your `pyproject.toml`:
 include = ["src", "tests", "typed_pytest_stubs"]
 ```
 
+#### Type Checker Configuration for Generated Stubs
+
+Since `typed_pytest_stubs/` is typically gitignored, some type checkers need extra configuration to find the generated stubs.
+
+**pyrefly (Meta's type checker)**
+
+Add the project root to `search-path`:
+
+```toml
+[tool.pyrefly]
+project-includes = ["src", "tests"]
+# Add project root so typed_pytest_stubs can be found
+search-path = ["."]
+```
+
+**ty (Astral's type checker)**
+
+Add the project root to `extra-paths`:
+
+```toml
+[tool.ty.environment]
+# Add project root so typed_pytest_stubs can be found
+extra-paths = ["."]
+```
+
+**mypy and pyright**
+
+These work out of the box since they auto-discover packages in the project root.
+
 #### Recommended Workflow
 
 The generated stubs should **not** be committed to Git. Instead, generate them:
