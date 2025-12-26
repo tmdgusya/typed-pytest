@@ -6,11 +6,11 @@ import argparse
 import sys
 from pathlib import Path
 
-from typed_pytest_generator import generate_stubs
 from typed_pytest_generator._config import (
     ConfigLoadError,
     load_config,
 )
+from typed_pytest_generator._generator import BackendType, generate_stubs
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -39,6 +39,9 @@ Examples:
   # Specify output directory
   typed-pytest-generator -o typed_stubs -t mypkg.services.UserService
 
+  # Use stubgen backend for better type information
+  typed-pytest-generator --backend stubgen -t mypkg.services.UserService
+
   # Use explicit config file
   typed-pytest-generator --config /path/to/pyproject.toml
 
@@ -48,6 +51,7 @@ Configuration in pyproject.toml:
   output-dir = "typed_pytest_stubs"
   include-private = false
   exclude-targets = ["mypkg.internal.PrivateClass"]
+  backend = "inspect"  # or "stubgen" for better type info
         """,
     )
 
@@ -98,6 +102,16 @@ Configuration in pyproject.toml:
         help="Enable verbose output",
     )
 
+    parser.add_argument(
+        "-b",
+        "--backend",
+        choices=["inspect", "stubgen"],
+        default=None,
+        help="Backend for type extraction (default: inspect). "
+        "'inspect' is fast but returns Any for return types. "
+        "'stubgen' uses mypy to preserve actual return types.",
+    )
+
     args = parser.parse_args(argv)
 
     try:
@@ -129,6 +143,9 @@ Configuration in pyproject.toml:
             )
             return 1
 
+        # Determine backend to use (CLI overrides config)
+        backend: BackendType = args.backend if args.backend else config.backend
+
         if args.verbose:
             print(f"[typed-pytest-generator] Targets: {targets}", file=sys.stderr)
             print(
@@ -137,6 +154,10 @@ Configuration in pyproject.toml:
             )
             print(
                 f"[typed-pytest-generator] Include private: {config.include_private}",
+                file=sys.stderr,
+            )
+            print(
+                f"[typed-pytest-generator] Backend: {backend}",
                 file=sys.stderr,
             )
             if config.exclude_targets:
@@ -149,6 +170,7 @@ Configuration in pyproject.toml:
             targets=targets,
             output_dir=config.output_dir,
             include_private=config.include_private,
+            backend=backend,
         )
 
         if args.verbose:
