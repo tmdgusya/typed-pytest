@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import inspect
+import pkgutil
 import sys
 from importlib import import_module
 from pathlib import Path
@@ -303,7 +304,8 @@ class StubGenerator:
         """Expand wildcard patterns in targets.
 
         Supports:
-            - "module.submodule.*" - all classes in the module
+            - "module.submodule.**" - all classes in the package recursively
+            - "module.submodule.*" - all classes in the module (non-recursive)
             - "module.submodule.ClassName" - specific class (no expansion)
 
         Args:
@@ -315,28 +317,88 @@ class StubGenerator:
         expanded: list[str] = []
 
         for target in targets:
-            if target.endswith(".*"):
-                # Wildcard pattern: import module and find all classes
+            if target.endswith(".**"):
+                # Recursive wildcard: scan all submodules
+                package_path = target[:-3]  # Remove ".**"
+                expanded.extend(self._expand_recursive(package_path))
+            elif target.endswith(".*"):
+                # Single-level wildcard: import module and find all classes
                 module_path = target[:-2]  # Remove ".*"
-                try:
-                    module = import_module(module_path)
-                    for name in dir(module):
-                        if name.startswith("_"):
-                            continue
-                        attr = getattr(module, name)
-                        # Only include classes defined in this module
-                        if isinstance(attr, type) and attr.__module__ == module_path:
-                            expanded.append(f"{module_path}.{name}")
-                except ImportError as e:
-                    print(
-                        f"[typed-pytest-generator] Error importing {module_path}: {e}",
-                        file=sys.stderr,
-                    )
+                expanded.extend(self._expand_single_module(module_path))
             else:
                 # Regular target, no expansion
                 expanded.append(target)
 
         return expanded
+
+    def _expand_single_module(self, module_path: str) -> list[str]:
+        """Expand a single module to find all classes defined in it.
+
+        Args:
+            module_path: The module path (e.g., "myapp.services")
+
+        Returns:
+            List of fully qualified class names
+        """
+        result: list[str] = []
+        try:
+            module = import_module(module_path)
+            for name in dir(module):
+                if name.startswith("_"):
+                    continue
+                attr = getattr(module, name)
+                # Only include classes defined in this module
+                if isinstance(attr, type) and attr.__module__ == module_path:
+                    result.append(f"{module_path}.{name}")
+        except ImportError as e:
+            print(
+                f"[typed-pytest-generator] Error importing {module_path}: {e}",
+                file=sys.stderr,
+            )
+        return result
+
+    def _expand_recursive(self, package_path: str) -> list[str]:
+        """Recursively expand a package to find all classes in all submodules.
+
+        Args:
+            package_path: The package path (e.g., "myapp.repository")
+
+        Returns:
+            List of fully qualified class names from all submodules
+        """
+        result: list[str] = []
+        try:
+            package = import_module(package_path)
+
+            # First, get classes from the package itself
+            result.extend(self._expand_single_module(package_path))
+
+            # Check if it's a package (has __path__)
+            if hasattr(package, "__path__"):
+                # Walk through all submodules recursively
+                for _importer, modname, _ispkg in pkgutil.walk_packages(
+                    package.__path__, prefix=f"{package_path}."
+                ):
+                    try:
+                        submodule = import_module(modname)
+                        for name in dir(submodule):
+                            if name.startswith("_"):
+                                continue
+                            attr = getattr(submodule, name)
+                            # Only include classes defined in this submodule
+                            if isinstance(attr, type) and attr.__module__ == modname:
+                                result.append(f"{modname}.{name}")
+                    except ImportError as e:
+                        print(
+                            f"[typed-pytest-generator] Error importing {modname}: {e}",
+                            file=sys.stderr,
+                        )
+        except ImportError as e:
+            print(
+                f"[typed-pytest-generator] Error importing {package_path}: {e}",
+                file=sys.stderr,
+            )
+        return result
 
     def _import_class(self, target: str) -> type | None:
         """Import the target class from a fully qualified string path.
