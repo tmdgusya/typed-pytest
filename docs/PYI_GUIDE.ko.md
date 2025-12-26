@@ -35,32 +35,30 @@
 
 ### 예시
 
-**`typed_pytest/__init__.py`** (런타임 코드):
+**표준 `.pyi` 방식** (typed-pytest는 이 방식을 사용하지 않음):
 ```python
+# module.py - 런타임 코드
 class TypedMock:
     def __init__(self, spec=None, **kwargs):
-        self._mock = ...  # 실제 구현
+        self._mock = ...
 
-    def __getattr__(self, name):
-        return MockedMethod()  # 여기서 마법이 일어남!
-```
-
-**`typed_pytest/__init__.pyi`** (타입 스텁):
-```python
+# module.pyi - 타입 스텁 (별도 파일)
 class TypedMock:
-    _mock: Any
-
-    def __init__(
-        self,
-        spec: type[_T] | None = None,
-        *,
-        wraps: _T | None = None,
-        name: str | None = None,
-        **kwargs: Any,
-    ) -> None: ...
-
-    def __getattr__(self, name: str) -> MockedMethod: ...
+    def __init__(self, spec: type[_T] | None = None) -> None: ...
 ```
+
+**typed-pytest의 방식** — 런타임 스텁을 생성합니다:
+```python
+# typed_pytest_stubs/_runtime.py (typed-pytest-generator가 생성)
+@typing.overload
+def typed_mock(cls: type[UserService], ...) -> UserService_TypedMock: ...
+
+class UserService_TypedMock:
+    @property
+    def get_user(self) -> MockedMethod[[int], dict]: ...
+```
+
+이렇게 생성된 스텁은 여러분의 클래스에 대해 완벽한 IDE 자동완성을 제공합니다!
 
 ---
 
@@ -138,11 +136,12 @@ Python이 코드를 실행할 때, 문장을 한 줄씩 실행합니다:
 
 ```python
 # 이것은 실제로 실행되고 객체를 생성함
-mock = TypedMock[UserService]()
+mock = typed_mock(UserService)  # TypedMock 인스턴스 생성
 mock.get_user(1)  # TypedMock.__getattr__("get_user")를 호출함
 ```
 
 런타임에서:
+- `typed_mock()`이 `spec=UserService`로 `TypedMock` 인스턴스를 생성함
 - `__getattr__`이 실제 속성 이름과 함께 호출됨
 - `MockedMethod` 객체가 생성됨
 - 코드가 계속 실행됨
@@ -264,44 +263,46 @@ mock.get_user(1)  # 파라미터가 타입 체크되지 않음!
 - 런타임 코드에 **새로운 기능**을 추가하는 건가?
 - **타입 힌트**를 업데이트하는 건가?
 - **버그**를 수정하는 건가?
+- **스텁 생성기**를 수정하는 건가?
 
-### 2단계: `.py`와 `.pyi` 모두 업데이트하기
+### 2단계: typed-pytest 아키텍처 이해하기
 
-**항상 두 파일을 함께 업데이트하세요:**
+typed-pytest는 전통적인 `.pyi` 파일을 사용하지 않습니다. 대신:
 
-| 파일 | 목적 |
-|------|------|
-| `.py` | 런타임 구현 (실제 동작) |
-| `.pyi` | 타입 스텁 (IDE와 타입 체크어용) |
+| 컴포넌트 | 목적 |
+|----------|------|
+| `src/typed_pytest/*.py` | 코어 라이브러리 (TypedMock, MockedMethod 등) |
+| `src/typed_pytest_generator/` | 스텁을 생성하는 CLI 도구 |
+| `typed_pytest_stubs/_runtime.py` | **자동 생성된** IDE 자동완성용 스텁 |
 
-### 3단계: 예시 — 새로운 메서드 추가
+**중요:** `typed_pytest_stubs/`는 자동 생성됩니다! 수동으로 편집하지 마세요.
 
-**원래 코드:**
+### 3단계: 예시 — TypedMock에 새로운 메서드 추가
+
+**런타임 코드 업데이트:**
 ```python
-# typed_pytest/__init__.py
-class TypedMock:
-    def reset_mock(self) -> None:
-        """ mock을 초기 상태로 재설정합니다. """
-        self._mock.reset_mock()
-```
-
-**새로운 기능으로 업데이트된 코드:**
-```python
-# typed_pytest/__init__.py
+# src/typed_pytest/_mock.py
 class TypedMock:
     def reset_mock(self, return_value: bool = False) -> None:
-        """ mock을 초기 상태로 재설정합니다. """
+        """mock을 초기 상태로 재설정합니다."""
         self._mock.reset_mock(return_value=return_value)
 ```
 
-**`.pyi`도 업데이트해야 함:**
-```python
-# typed_pytest/__init__.pyi
-class TypedMock:
-    def reset_mock(self, return_value: bool = False) -> None: ...
+타입 힌트가 이미 `.py` 파일에 있으므로 별도의 `.pyi` 파일이 필요 없습니다!
+
+### 4단계: 스텁 생성기 수정 시
+
+스텁 생성 방식을 변경하면 (`src/typed_pytest_generator/`), 재생성하고 테스트하세요:
+
+```bash
+# 스텁 재생성
+uv run typed-pytest-generator
+
+# 생성된 출력 확인
+cat typed_pytest_stubs/_runtime.py
 ```
 
-### 4단계: 변경 사항 테스트하기
+### 5단계: 변경 사항 테스트하기
 
 변경 사항을 확인하려면 다음 명령들을 실행하세요:
 
@@ -310,36 +311,43 @@ class TypedMock:
 uv run pytest tests/
 uv run ruff check src/
 uv run ruff format src/
+
+# 타입 체커 (4개 모두 통과해야 함)
 uv run mypy src/
 uv run pyright src/
+uv run pyrefly check src/typed_pytest/
+uv run ty check src/typed_pytest/
 ```
 
-### 5단계: 따를 일반적인 패턴
+### 6단계: 따를 일반적인 패턴
 
 #### 프로퍼티 추가
 ```python
-# .pyi에서
+# src/typed_pytest/_mock.py에서
 @property
-def my_property(self) -> ReturnType: ...
+def my_property(self) -> ReturnType:
+    return self._value
 
 @my_property.setter
-def my_property(self, value: ReturnType) -> None: ...
+def my_property(self, value: ReturnType) -> None:
+    self._value = value
 ```
 
 #### 메서드 추가
 ```python
-# .pyi에서
-def my_method(self, param: ParamType, /, *, optional: OptType = None) -> ReturnType: ...
+def my_method(self, param: ParamType, *, optional: OptType = None) -> ReturnType:
+    ...
 ```
 
 #### 타입 변수 사용
 ```python
-# .pyi 상단에서
-_T = TypeVar("_T")
+from typing import TypeVar, Generic
 
-# 클래스에서
-class TypedMock(Generic[_T]):
-    def get_typed(self) -> _T: ...
+T = TypeVar("T")
+
+class TypedMock(Generic[T]):
+    def get_typed(self) -> T:
+        ...
 ```
 
 ---
@@ -348,26 +356,37 @@ class TypedMock(Generic[_T]):
 
 ### 문제: "타입 체크어가 내 변경을 인식하지 못함"
 
-**해결책:** `.py`와 `.pyi` 파일 둘 다 업데이트했는지 확인하세요. 또한 타입 체크어/IDE를 재시작해보세요.
+**해결책:**
+1. `.py` 파일에 적절한 타입 힌트를 업데이트했는지 확인하세요
+2. 타입 체크어/IDE를 재시작하세요
+3. `uv sync`를 실행하여 패키지를 재설치하세요
 
 ### 문제: "mock 메서드에 자동완성이 작동하지 않음"
 
-**예상된 동작입니다!** `__getattr__` 한계로 인해:
-- `mock.some_method.assert_called_once()`에 접근할 수 있음
-- 하지만 IDE가 자동완성에서 `some_method`를 제안하지 않음
+**스텁을 생성했나요?** 실행하세요:
+```bash
+uv run typed-pytest-generator
+```
+
+스텁이 있는데도 자동완성이 안 되면:
+- `typed_pytest`가 아닌 `typed_pytest_stubs`에서 `typed_mock`을 import하세요
+- 타입 체커 설정을 확인하세요 (README의 pyrefly/ty 설정 참조)
 
 ### 문제: "타입 체크어가 '알 수 없는 속성'이라고 함"
 
 **확인:**
-1. 메서드를 `.py`와 `.pyi` 둘 다 추가했나요?
-2. 메서드 시그니처가 맞나요?
-3. 변경 후 타입 체크어를 실행했나요?
+1. 클래스 변경 후 스텁을 재생성했나요?
+2. 클래스가 `[tool.typed-pytest-generator].targets`에 포함되어 있나요?
+3. 스텁 재생성 후 타입 체커를 실행했나요?
 
 ### 문제: "메서드 이름 자동완성을 추가하고 싶음"
 
-**안타깝게도, 이것은 Python 타입 시스템의 근본적인 한계입니다.** `.pyi` 형식은 "클래스 X의 모든 메서드가 여기서 사용 가능"을 표현할 수 없습니다. 다음이 필요합니다:
-- IDE 특정 플러그인
-- 또는 완전히 다른 접근 방식
+**그게 바로 typed-pytest-generator가 하는 일입니다!** 실행하세요:
+```bash
+uv run typed-pytest-generator -t your.module.YourClass
+```
+
+이렇게 하면 IDE 자동완성을 위해 클래스의 실제 메서드 이름이 포함된 스텁이 생성됩니다.
 
 ---
 
@@ -397,9 +416,9 @@ class TypedMock(Generic[_T]):
 ## 요약
 
 - **`.pyi` 파일은 타입 스텁** — IDE와 타입 체크어가 코드를 이해하는 것을 도와줌
-- **런타임과 정적 타입은 다름** — `.pyi`는 코드가 실행되는 방식에 영향을 주지 않음
-- **`__getattr__`에는 한계가 있음** — 타입 정보는 제공하지만 속성 이름 자동완성은 제공하지 않음
-- **기여하려면 두 파일을 모두 업데이트해야 함** — 항상 `.py`와 `.pyi`를 동기화 유지
+- **typed-pytest는 생성된 스텁을 사용** — 수동 `.pyi` 대신 `typed-pytest-generator` 실행
+- **런타임과 정적 타입은 다름** — 스텁은 코드가 실행되는 방식에 영향을 주지 않음
+- **4개의 타입 체커 지원** — mypy, pyright, pyrefly, ty
 - **당황하지 마세요!** 혼란스럽다면, 올바른 질문을 하고 있는 것입니다
 
 ---
