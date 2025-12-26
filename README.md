@@ -172,6 +172,13 @@ The generator supports two backends for extracting type information:
 | `inspect` (default) | Fast (~10ms/class) | `typing.Any` | Quick iteration during development |
 | `stubgen` | Slower (~500ms/class) | Preserved (`dict[str, Any]`, `bool`, etc.) | Production, CI, better type hints |
 
+> **Note:** The `stubgen` backend requires `mypy` to be installed:
+> ```bash
+> pip install mypy
+> # or
+> uv add mypy --dev
+> ```
+
 ```bash
 # Use default inspect backend (fast)
 typed-pytest-generator -t myapp.services.UserService
