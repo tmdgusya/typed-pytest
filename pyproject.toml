@@ -195,6 +195,28 @@ reportDuplicateImport = true
 reportInconsistentConstructor = false
 
 # ============================================================================
+# pyrefly configuration
+# ============================================================================
+[tool.pyrefly]
+project-includes = ["src", "tests"]
+# Add project root to search path so typed_pytest_stubs can be found
+# (typed_pytest_stubs is gitignored so not auto-discovered)
+search-path = ["."]
+
+# ============================================================================
+# ty configuration (Astral's type checker)
+# ============================================================================
+[tool.ty.environment]
+# Add project root to search path so typed_pytest_stubs can be found
+extra-paths = ["."]
+
+[tool.ty.rules]
+# Ignore redundant-cast warnings (intentional for type safety)
+redundant-cast = "ignore"
+# TypedMock inherits from MagicMock which is callable, but ty doesn't know
+call-non-callable = "ignore"
+
+# ============================================================================
 # ruff configuration
 # ============================================================================
 [tool.ruff]
@@ -284,3 +306,9 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
+
+[dependency-groups]
+dev = [
+    "pyrefly>=0.46.1",
+    "ty>=0.0.1a11",
+]
