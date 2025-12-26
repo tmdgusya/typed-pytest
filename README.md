@@ -172,10 +172,13 @@ You can configure `typed-pytest-generator` in your `pyproject.toml` file. This a
 ```toml
 [tool.typed-pytest-generator]
 # List of fully qualified class names to generate stubs for
-# Supports wildcard patterns: "module.*" matches all classes in the module
+# Supports wildcard patterns:
+#   - "module.*"  matches all classes in the module (non-recursive)
+#   - "module.**" matches all classes in the package recursively (includes submodules)
 targets = [
-    "myapp.services.*",                      # All classes in myapp.services
-    "myapp.repositories.ProductRepository",  # Specific class
+    "myapp.services.*",                      # All classes in myapp.services module
+    "myapp.repositories.**",                 # All classes in repositories and all submodules
+    "myapp.models.User",                     # Specific class
 ]
 
 # Output directory for generated stubs (default: "typed_pytest_stubs")
@@ -218,11 +221,14 @@ typed-pytest-generator -e myapp.services.SkipThis
 # Use a specific config file
 typed-pytest-generator -c /path/to/pyproject.toml
 
-# Use wildcard to match all classes in a module
+# Use wildcard to match all classes in a module (non-recursive)
 typed-pytest-generator -t "myapp.services.*"
 
+# Use recursive wildcard to match all classes in a package and submodules
+typed-pytest-generator -t "myapp.repositories.**"
+
 # Combine options
-typed-pytest-generator -t "myapp.services.*" -e myapp.services.Internal -o stubs -v
+typed-pytest-generator -t "myapp.repositories.**" -e myapp.repositories.Internal -o stubs -v
 ```
 
 #### IDE and Type Checker Setup
