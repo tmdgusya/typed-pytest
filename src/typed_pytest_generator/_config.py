@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import sys
 from dataclasses import dataclass, field
+from typing import Literal
 
 
 if sys.version_info >= (3, 11):  # noqa: UP036
@@ -15,6 +16,9 @@ else:
     import tomli as tomllib
 from pathlib import Path
 from typing import Any
+
+
+BackendType = Literal["inspect", "stubgen"]
 
 
 @dataclass
@@ -26,12 +30,14 @@ class GeneratorConfig:
         output_dir: Directory where stub files will be generated
         include_private: Whether to include private methods (starting with _)
         exclude_targets: List of fully qualified class names to exclude
+        backend: Backend for type extraction ("inspect" or "stubgen")
     """
 
     targets: list[str] = field(default_factory=list)
     output_dir: str = "typed_pytest_stubs"
     include_private: bool = False
     exclude_targets: list[str] = field(default_factory=list)
+    backend: BackendType = "inspect"
 
     def get_filtered_targets(self) -> list[str]:
         """Get targets with exclusions applied.
@@ -51,6 +57,7 @@ class GeneratorConfig:
         cli_output_dir: str | None = None,
         cli_include_private: bool | None = None,
         cli_exclude_targets: list[str] | None = None,
+        cli_backend: BackendType | None = None,
     ) -> GeneratorConfig:
         """Merge config with CLI arguments (CLI takes precedence).
 
@@ -59,6 +66,7 @@ class GeneratorConfig:
             cli_output_dir: Output directory from CLI
             cli_include_private: Include private flag from CLI
             cli_exclude_targets: Exclude targets from CLI (merged with config)
+            cli_backend: Backend from CLI (overrides config if provided)
 
         Returns:
             New GeneratorConfig with merged values
@@ -79,11 +87,15 @@ class GeneratorConfig:
             set(self.exclude_targets) | set(cli_exclude_targets or [])
         )
 
+        # CLI backend overrides config if provided
+        backend = cli_backend if cli_backend else self.backend
+
         return GeneratorConfig(
             targets=targets,
             output_dir=output_dir,
             include_private=include_private,
             exclude_targets=exclude_targets,
+            backend=backend,
         )
 
 
@@ -180,11 +192,18 @@ def _parse_config_dict(data: dict[str, Any]) -> GeneratorConfig:
     if not all(isinstance(t, str) for t in exclude_targets):
         raise ConfigLoadError("All 'exclude-targets' must be strings")
 
+    backend = tool_config.get("backend", "inspect")
+    if not isinstance(backend, str):
+        raise ConfigLoadError("'backend' must be a string")
+    if backend not in ("inspect", "stubgen"):
+        raise ConfigLoadError("'backend' must be 'inspect' or 'stubgen'")
+
     return GeneratorConfig(
         targets=targets,
         output_dir=output_dir,
         include_private=include_private,
         exclude_targets=exclude_targets,
+        backend=backend,  # type: ignore[arg-type]
     )
 
 

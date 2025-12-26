@@ -8,13 +8,16 @@ import re
 import sys
 from importlib import import_module
 from pathlib import Path
-from typing import TypeVar
+from typing import Literal, TypeVar
 
+from typed_pytest_generator._backend import StubBackend
+from typed_pytest_generator._backend_inspect import InspectBackend
 from typed_pytest_generator._inspector import inspect_class
 from typed_pytest_generator._templates import generate_class_stub
 
 
 T = TypeVar("T")
+BackendType = Literal["inspect", "stubgen"]
 
 
 def _sanitize_default_value(match: re.Match[str]) -> str:
@@ -67,6 +70,25 @@ def _sanitize_signature(sig_str: str) -> str:
     return re.sub(r"= ([^,\)]+)(?=[,\)])", _sanitize_default_value, sig_str)
 
 
+def _create_backend(backend_type: BackendType, include_private: bool) -> StubBackend:
+    """Create a stub backend instance.
+
+    Args:
+        backend_type: Type of backend to use ("inspect" or "stubgen")
+        include_private: Whether to include private methods
+
+    Returns:
+        StubBackend instance
+    """
+    if backend_type == "stubgen":
+        from typed_pytest_generator._backend_stubgen import (  # noqa: PLC0415
+            StubgenBackend,
+        )
+
+        return StubgenBackend(include_private=include_private)
+    return InspectBackend(include_private=include_private)
+
+
 class StubGenerator:
     """Generates .pyi stub files for TypedMock with method signatures."""
 
@@ -75,6 +97,7 @@ class StubGenerator:
         targets: list[str],
         output_dir: str | Path = "typed_pytest_stubs",
         include_private: bool = False,
+        backend: BackendType = "inspect",
     ) -> None:
         """Initialize the stub generator.
 
@@ -82,10 +105,15 @@ class StubGenerator:
             targets: List of fully qualified class names (e.g., "mypkg.services.UserService")
             output_dir: Directory where stub files will be generated
             include_private: Whether to include private methods (starting with _)
+            backend: Backend to use for extraction ("inspect" or "stubgen")
+                - "inspect": Uses Python's inspect module (fast, runtime introspection)
+                - "stubgen": Uses mypy's stubgen (slower, but preserves actual return types)
         """
         self.targets = targets
         self.output_dir = Path(output_dir)
         self.include_private = include_private
+        self.backend = _create_backend(backend, include_private)
+        self._backend_type = backend
 
     def generate(self) -> list[Path]:
         """Generate all stub files for configured targets.
@@ -181,121 +209,15 @@ class StubGenerator:
             init_py_path.write_text(init_py_content)
             generated_files.append(init_py_path)
 
-            # Generate _runtime.py with simplified method signatures
-            # Use Any return types to avoid referencing test fixtures
+            # Generate _runtime.py with method signatures from backend
             runtime_classes: list[str] = []
-            for class_name, target in class_to_target.items():
+            for target in class_to_target.values():
                 cls = self._import_class(target)
                 if cls is None:
                     continue
 
-                # Collect method info for both base class and TypedMock class
-                method_lines: list[str] = [f"class {class_name}:"]
-                typed_mock_lines: list[str] = [
-                    f"class {class_name}_TypedMock:",
-                    "    @property",
-                    f"    def typed_class(self) -> type[{class_name}] | None: ...",
-                ]
-                has_methods = False
-
-                for name in dir(cls):
-                    if name.startswith("_"):
-                        continue
-                    # Get raw attribute to check for staticmethod/classmethod/property
-                    raw_attr = inspect.getattr_static(cls, name)
-                    is_static = isinstance(raw_attr, staticmethod)
-                    is_classmethod = isinstance(raw_attr, classmethod)
-                    is_property = isinstance(raw_attr, property)
-
-                    # Handle properties
-                    if is_property:
-                        has_methods = True
-                        method_lines.append("    @property")
-                        method_lines.append(f"    def {name}(self) -> typing.Any: ...")
-                        # For TypedMock, properties return MagicMock (via PropertyMock)
-                        typed_mock_lines.append("    @property")
-                        typed_mock_lines.append(
-                            f"    def {name}(self) -> typing.Any: ..."
-                        )
-                        continue
-
-                    attr = getattr(cls, name)
-                    if callable(attr) and not isinstance(attr, type):
-                        has_methods = True
-                        # Check if it's an async method
-                        # For staticmethod/classmethod, we need to unwrap to get the actual function
-                        if is_static or is_classmethod:
-                            is_async = inspect.iscoroutinefunction(raw_attr.__func__)
-                        else:
-                            is_async = inspect.iscoroutinefunction(raw_attr)
-                        try:
-                            sig = inspect.signature(attr)
-                            sig_str = _sanitize_signature(str(sig))
-
-                            # Extract parameter types for MockedMethod
-                            param_types = self._extract_param_types(sig)
-
-                            # Handle return annotation replacement
-                            if "->" in sig_str:
-                                parts = sig_str.split("->")
-                                params = parts[0].rstrip()
-                                simplified = f"{params} -> typing.Any: ..."
-                            else:
-                                simplified = f"{sig_str}: ..."
-
-                            # Add to base class
-                            async_prefix = "async " if is_async else ""
-                            if is_static:
-                                method_lines.append("    @staticmethod")
-                                method_lines.append(
-                                    f"    {async_prefix}def {name}{simplified}"
-                                )
-                            elif is_classmethod:
-                                method_lines.append("    @classmethod")
-                                method_lines.append(
-                                    f"    {async_prefix}def {name}(cls, {simplified[1:]}"
-                                    if simplified.startswith("(")
-                                    else f"    {async_prefix}def {name}{simplified}"
-                                )
-                            else:
-                                method_lines.append(
-                                    f"    {async_prefix}def {name}{simplified}"
-                                )
-
-                            # Add to TypedMock class as property returning MockedMethod/AsyncMockedMethod
-                            mocked_method_type = (
-                                "AsyncMockedMethod" if is_async else "MockedMethod"
-                            )
-                            typed_mock_lines.append("    @property")
-                            typed_mock_lines.append(
-                                f"    def {name}(self) -> {mocked_method_type}[{param_types}, typing.Any]: ..."
-                            )
-
-                        except (ValueError, TypeError):
-                            method_lines.append(
-                                f"    def {name}(self, *args: typing.Any, **kwargs: typing.Any) -> typing.Any: ..."
-                            )
-                            typed_mock_lines.append("    @property")
-                            typed_mock_lines.append(
-                                f"    def {name}(self) -> MockedMethod[..., typing.Any]: ..."
-                            )
-
-                # Add pass if class has no methods
-                if not has_methods:
-                    method_lines.append("    pass")
-                    # typed_mock_lines already has typed_class, so no pass needed
-
-                # Combine all class definitions
-                method_lines.extend(
-                    [
-                        "",
-                        *typed_mock_lines,
-                        "",
-                        f"class {class_name}Mock({class_name}_TypedMock):",
-                        "    pass",
-                    ]
-                )
-                runtime_classes.append("\n".join(method_lines))
+                runtime_class_str = self._generate_runtime_class(cls, target)
+                runtime_classes.append(runtime_class_str)
 
             # Generate overloaded typed_mock function
             typed_mock_overloads: list[str] = []
@@ -474,6 +396,110 @@ class StubGenerator:
             )
             return None
 
+    def _generate_runtime_class(self, cls: type, target: str) -> str:
+        """Generate runtime class string using backend.
+
+        Args:
+            cls: The class to generate runtime code for
+            target: Fully qualified class name
+
+        Returns:
+            String containing class definitions for _runtime.py
+        """
+        class_name = cls.__name__
+        info = self.backend.extract_class_info(cls, target)
+
+        # Collect method info for both base class and TypedMock class
+        method_lines: list[str] = [f"class {class_name}:"]
+        typed_mock_lines: list[str] = [
+            f"class {class_name}_TypedMock:",
+            "    @property",
+            f"    def typed_class(self) -> type[{class_name}] | None: ...",
+        ]
+        has_methods = False
+
+        for method in info.methods:
+            # Skip __init__ for runtime class generation
+            if method.name == "__init__":
+                continue
+
+            has_methods = True
+
+            # Handle properties
+            if method.is_property:
+                method_lines.append("    @property")
+                method_lines.append(
+                    f"    def {method.name}(self) -> {method.return_type}: ..."
+                )
+                # For TypedMock, properties return MagicMock (via PropertyMock)
+                typed_mock_lines.append("    @property")
+                typed_mock_lines.append(
+                    f"    def {method.name}(self) -> {method.return_type}: ..."
+                )
+                continue
+
+            # Build simplified signature (use return_type from backend)
+            # Extract just the parameters part from signature
+            sig_str = method.signature
+            if "->" in sig_str:
+                params_part = sig_str.split("->")[0].rstrip()
+            else:
+                params_part = sig_str
+
+            simplified = f"{params_part} -> {method.return_type}: ..."
+
+            # Add to base class
+            async_prefix = "async " if method.is_async else ""
+            if method.is_static:
+                method_lines.append("    @staticmethod")
+                method_lines.append(f"    {async_prefix}def {method.name}{simplified}")
+            elif method.is_classmethod:
+                method_lines.append("    @classmethod")
+                # For classmethod, signature already has 'cls'
+                method_lines.append(f"    {async_prefix}def {method.name}{simplified}")
+            else:
+                method_lines.append(f"    {async_prefix}def {method.name}{simplified}")
+
+            # Add to TypedMock class as property returning MockedMethod/AsyncMockedMethod
+            mocked_method_type = (
+                "AsyncMockedMethod" if method.is_async else "MockedMethod"
+            )
+            param_types_str = self._format_param_types(method.param_types)
+            typed_mock_lines.append("    @property")
+            typed_mock_lines.append(
+                f"    def {method.name}(self) -> {mocked_method_type}[{param_types_str}, {method.return_type}]: ..."
+            )
+
+        # Add pass if class has no methods
+        if not has_methods:
+            method_lines.append("    pass")
+            # typed_mock_lines already has typed_class, so no pass needed
+
+        # Combine all class definitions
+        method_lines.extend(
+            [
+                "",
+                *typed_mock_lines,
+                "",
+                f"class {class_name}Mock({class_name}_TypedMock):",
+                "    pass",
+            ]
+        )
+        return "\n".join(method_lines)
+
+    def _format_param_types(self, param_types: list[str]) -> str:
+        """Format parameter types list for MockedMethod.
+
+        Args:
+            param_types: List of parameter type strings
+
+        Returns:
+            Formatted string like "[int, str]" or "[]"
+        """
+        if not param_types:
+            return "[]"
+        return "[" + ", ".join(param_types) + "]"
+
     def _extract_param_types(self, sig: inspect.Signature) -> str:
         """Extract parameter types from a signature for MockedMethod.
 
@@ -550,6 +576,7 @@ def generate_stubs(
     targets: list[str],
     output_dir: str | Path = "typed_pytest_stubs",
     include_private: bool = False,
+    backend: BackendType = "inspect",
 ) -> list[Path]:
     """Convenience function to generate stubs for specified targets.
 
@@ -557,9 +584,10 @@ def generate_stubs(
         targets: List of fully qualified class names
         output_dir: Directory for generated stubs
         include_private: Whether to include private methods
+        backend: Backend to use for extraction ("inspect" or "stubgen")
 
     Returns:
         List of generated stub file paths
     """
-    generator = StubGenerator(targets, output_dir, include_private)
+    generator = StubGenerator(targets, output_dir, include_private, backend)
     return generator.generate()

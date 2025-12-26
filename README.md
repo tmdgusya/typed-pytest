@@ -163,6 +163,42 @@ def test_user_service():
     result = mock.get_user(1)
 ```
 
+### Backend Selection
+
+The generator supports two backends for extracting type information:
+
+| Backend | Speed | Return Types | Use Case |
+|---------|-------|--------------|----------|
+| `inspect` (default) | Fast (~10ms/class) | `typing.Any` | Quick iteration during development |
+| `stubgen` | Slower (~500ms/class) | Preserved (`dict[str, Any]`, `bool`, etc.) | Production, CI, better type hints |
+
+```bash
+# Use default inspect backend (fast)
+typed-pytest-generator -t myapp.services.UserService
+
+# Use stubgen backend for better type information
+typed-pytest-generator --backend stubgen -t myapp.services.UserService
+
+# Short form
+typed-pytest-generator -b stubgen -t myapp.services.UserService
+```
+
+**Example output difference:**
+
+With `inspect` backend:
+```python
+class UserService_TypedMock:
+    @property
+    def get_user(self) -> MockedMethod[[int], typing.Any]: ...
+```
+
+With `stubgen` backend:
+```python
+class UserService_TypedMock:
+    @property
+    def get_user(self) -> MockedMethod[[int], dict[str, Any]]: ...
+```
+
 ### Configuration
 
 #### pyproject.toml Configuration
@@ -192,6 +228,11 @@ exclude-targets = [
     "myapp.internal.PrivateHelper",
     "myapp.legacy.DeprecatedService",
 ]
+
+# Backend for type extraction (default: "inspect")
+# - "inspect": Fast, uses Python's inspect module
+# - "stubgen": Slower, uses mypy's stubgen for accurate return types
+backend = "inspect"
 ```
 
 Once configured, simply run:
