@@ -170,6 +170,8 @@ class StubGenerator:
                     attr = getattr(cls, name)
                     if callable(attr) and not isinstance(attr, type):
                         has_methods = True
+                        # Check if it's an async method
+                        is_async = inspect.iscoroutinefunction(raw_attr)
                         try:
                             sig = inspect.signature(attr)
                             sig_str = str(sig)
@@ -186,23 +188,31 @@ class StubGenerator:
                                 simplified = f"{sig_str}: ..."
 
                             # Add to base class
+                            async_prefix = "async " if is_async else ""
                             if is_static:
                                 method_lines.append("    @staticmethod")
-                                method_lines.append(f"    def {name}{simplified}")
+                                method_lines.append(
+                                    f"    {async_prefix}def {name}{simplified}"
+                                )
                             elif is_classmethod:
                                 method_lines.append("    @classmethod")
                                 method_lines.append(
-                                    f"    def {name}(cls, {simplified[1:]}"
+                                    f"    {async_prefix}def {name}(cls, {simplified[1:]}"
                                     if simplified.startswith("(")
-                                    else f"    def {name}{simplified}"
+                                    else f"    {async_prefix}def {name}{simplified}"
                                 )
                             else:
-                                method_lines.append(f"    def {name}{simplified}")
+                                method_lines.append(
+                                    f"    {async_prefix}def {name}{simplified}"
+                                )
 
-                            # Add to TypedMock class as property returning MockedMethod
+                            # Add to TypedMock class as property returning MockedMethod/AsyncMockedMethod
+                            mocked_method_type = (
+                                "AsyncMockedMethod" if is_async else "MockedMethod"
+                            )
                             typed_mock_lines.append("    @property")
                             typed_mock_lines.append(
-                                f"    def {name}(self) -> MockedMethod[{param_types}, typing.Any]: ..."
+                                f"    def {name}(self) -> {mocked_method_type}[{param_types}, typing.Any]: ..."
                             )
 
                         except (ValueError, TypeError):
@@ -271,7 +281,7 @@ class StubGenerator:
                     "",
                     "import typing",
                     "",
-                    "from typed_pytest import MockedMethod",
+                    "from typed_pytest import AsyncMockedMethod, MockedMethod",
                     "",
                 ]
                 + runtime_classes
