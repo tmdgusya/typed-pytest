@@ -39,7 +39,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        checker: [mypy, pyright]
+        include:
+          - checker: mypy
+            command: mypy src/
+          - checker: pyright
+            command: pyright src/
+          # pyrefly only checks typed_pytest (generator has LiteralString false positives)
+          - checker: pyrefly
+            command: pyrefly check src/typed_pytest/
     steps:
       - uses: actions/checkout@v4
 
@@ -52,10 +59,10 @@ jobs:
         run: uv python install ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
-        run: uv sync --all-extras
+        run: uv sync --all-extras --all-groups
 
       - name: Run ${{ matrix.checker }}
-        run: uv run ${{ matrix.checker }} src/
+        run: uv run ${{ matrix.command }}
 
   test:
     name: Test (Python ${{ matrix.python-version }})
