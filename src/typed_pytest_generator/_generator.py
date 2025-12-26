@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import inspect
 import pkgutil
+import re
 import sys
 from importlib import import_module
 from pathlib import Path
@@ -14,6 +15,23 @@ from typed_pytest_generator._templates import generate_class_stub
 
 
 T = TypeVar("T")
+
+
+def _sanitize_signature(sig_str: str) -> str:
+    """Sanitize a signature string to replace invalid default values.
+
+    Some default values like `<class 'Foo'>` or `<function bar>` are not
+    valid Python syntax. This function replaces them with `...`.
+
+    Args:
+        sig_str: The signature string to sanitize
+
+    Returns:
+        A sanitized signature string with valid Python syntax
+    """
+    # Replace patterns like <class 'module.ClassName'> or <function name>
+    # with ... (ellipsis)
+    return re.sub(r"<[^>]+>", "...", sig_str)
 
 
 class StubGenerator:
@@ -179,7 +197,7 @@ class StubGenerator:
                             is_async = inspect.iscoroutinefunction(raw_attr)
                         try:
                             sig = inspect.signature(attr)
-                            sig_str = str(sig)
+                            sig_str = _sanitize_signature(str(sig))
 
                             # Extract parameter types for MockedMethod
                             param_types = self._extract_param_types(sig)
