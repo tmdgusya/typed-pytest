@@ -171,7 +171,11 @@ class StubGenerator:
                     if callable(attr) and not isinstance(attr, type):
                         has_methods = True
                         # Check if it's an async method
-                        is_async = inspect.iscoroutinefunction(raw_attr)
+                        # For staticmethod/classmethod, we need to unwrap to get the actual function
+                        if is_static or is_classmethod:
+                            is_async = inspect.iscoroutinefunction(raw_attr.__func__)
+                        else:
+                            is_async = inspect.iscoroutinefunction(raw_attr)
                         try:
                             sig = inspect.signature(attr)
                             sig_str = str(sig)
