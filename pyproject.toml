@@ -1,6 +1,6 @@
 [project]
 name = "typed-pytest"
-version = "0.1.5"
+version = "0.1.6"
 description = "Type-safe mocking for pytest - preserve original type hints while using mock features"
 readme = "README.md"
 requires-python = ">=3.10"
