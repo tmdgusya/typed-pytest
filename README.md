@@ -241,6 +241,37 @@ For pyright/pylance users, add the stubs directory to your `pyproject.toml`:
 include = ["src", "tests", "typed_pytest_stubs"]
 ```
 
+#### Recommended Workflow
+
+The generated stubs should **not** be committed to Git. Instead, generate them:
+
+1. **Before running tests locally**
+   ```bash
+   typed-pytest-generator && pytest
+   ```
+
+2. **In your CI pipeline**
+   ```yaml
+   # GitHub Actions example
+   - name: Generate test stubs
+     run: uv run typed-pytest-generator
+
+   - name: Run tests
+     run: uv run pytest
+   ```
+
+3. **As a Makefile target** (recommended)
+   ```makefile
+   test:
+       uv run typed-pytest-generator
+       uv run pytest
+   ```
+
+**Why not pre-commit hook or Git?**
+- Generated code causes unnecessary Git conflicts
+- Stubs should always reflect the current source code
+- Keeps PRs clean and focused on actual changes
+
 ## Development
 
 ```bash
