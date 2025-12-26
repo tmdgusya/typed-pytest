@@ -17,11 +17,42 @@ from typed_pytest_generator._templates import generate_class_stub
 T = TypeVar("T")
 
 
+def _sanitize_default_value(match: re.Match[str]) -> str:
+    """Sanitize a single default value.
+
+    Args:
+        match: Regex match containing the default value
+
+    Returns:
+        Sanitized default value or original if valid
+    """
+    value = match.group(1)
+
+    # Valid literals - keep as is
+    if re.match(r"^-?\d+\.?\d*$", value):  # Numbers (int, float, negative)
+        return f"= {value}"
+    # Strings (single or double quoted)
+    if re.match(r'^["\'].*["\']$', value):
+        return f"= {value}"
+    # Booleans and None
+    if value in ("True", "False", "None"):
+        return f"= {value}"
+    # Empty collections
+    if value in ("[]", "{}", "()", "set()"):
+        return f"= {value}"
+    # Ellipsis
+    if value == "...":
+        return f"= {value}"
+
+    # Everything else (undefined identifiers, <class ...>, etc.) -> ...
+    return "= ..."
+
+
 def _sanitize_signature(sig_str: str) -> str:
     """Sanitize a signature string to replace invalid default values.
 
-    Some default values like `<class 'Foo'>` or `<function bar>` are not
-    valid Python syntax. This function replaces them with `...`.
+    Replaces invalid default values (like `<class 'Foo'>`, `PydanticUndefined`,
+    or other undefined identifiers) with `...`.
 
     Args:
         sig_str: The signature string to sanitize
@@ -29,9 +60,11 @@ def _sanitize_signature(sig_str: str) -> str:
     Returns:
         A sanitized signature string with valid Python syntax
     """
-    # Replace patterns like <class 'module.ClassName'> or <function name>
-    # with ... (ellipsis)
-    return re.sub(r"<[^>]+>", "...", sig_str)
+    # First replace <class ...> and <function ...> patterns
+    sig_str = re.sub(r"<[^>]+>", "...", sig_str)
+
+    # Then sanitize all default values (match: = <value> followed by , or ))
+    return re.sub(r"= ([^,\)]+)(?=[,\)])", _sanitize_default_value, sig_str)
 
 
 class StubGenerator:
